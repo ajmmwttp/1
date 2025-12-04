@@ -122,6 +122,14 @@ class AIMemoryNote:
 
     def detect_bias(self, recent_n=10):
         """バイアス検出"""
+        if self.df_memory is None or len(self.df_memory) == 0:
+            self.bias_info = {'detected': False, 'bias': 0, 'std': 0}
+            return self.bias_info
+
+        if 'actual_value' not in self.df_memory.columns or 'error' not in self.df_memory.columns:
+            self.bias_info = {'detected': False, 'bias': 0, 'std': 0}
+            return self.bias_info
+
         df_completed = self.df_memory[self.df_memory['actual_value'].notna()].copy()
 
         if len(df_completed) < 3:
@@ -135,9 +143,9 @@ class AIMemoryNote:
             return self.bias_info
 
         bias = recent_errors.mean()
-        std = recent_errors.std()
+        std = recent_errors.std() if len(recent_errors) > 1 else 0
 
-        is_biased = abs(bias) > max(10, 0.5 * std)
+        is_biased = abs(bias) > max(10, 0.5 * std) if std > 0 else abs(bias) > 10
 
         self.bias_info = {
             'detected': is_biased,
@@ -170,6 +178,12 @@ class AIMemoryNote:
 
     def get_accuracy_stats(self):
         """精度統計を取得"""
+        if self.df_memory is None or len(self.df_memory) == 0:
+            return None
+
+        if 'actual_value' not in self.df_memory.columns:
+            return None
+
         df_completed = self.df_memory[self.df_memory['actual_value'].notna()].copy()
 
         if len(df_completed) == 0:
@@ -177,11 +191,11 @@ class AIMemoryNote:
 
         return {
             'total': len(df_completed),
-            'mae': df_completed['error'].abs().mean(),
-            'mae_pct': df_completed['error_pct'].abs().mean(),
-            'median_error': df_completed['error_pct'].median(),
-            'within_5pct': (df_completed['error_pct'].abs() <= 5).sum(),
-            'within_10pct': (df_completed['error_pct'].abs() <= 10).sum(),
+            'mae': df_completed['error'].abs().mean() if 'error' in df_completed.columns else 0,
+            'mae_pct': df_completed['error_pct'].abs().mean() if 'error_pct' in df_completed.columns else 0,
+            'median_error': df_completed['error_pct'].median() if 'error_pct' in df_completed.columns else 0,
+            'within_5pct': (df_completed['error_pct'].abs() <= 5).sum() if 'error_pct' in df_completed.columns else 0,
+            'within_10pct': (df_completed['error_pct'].abs() <= 10).sum() if 'error_pct' in df_completed.columns else 0,
         }
 
 
