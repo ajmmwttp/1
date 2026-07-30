@@ -222,7 +222,7 @@ export function CommandPalette({
                         strokeWidth={1.75}
                       />
                     ) : (
-                      <span className="tnum flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[var(--sunken)] text-[9px] text-[var(--ink-3)]">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[var(--sunken)] text-[9px] leading-none text-[var(--ink-3)]">
                         {row.label.slice(0, 1)}
                       </span>
                     )}

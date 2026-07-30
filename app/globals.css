@@ -134,6 +134,7 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@layer base {
 /* ── base ─────────────────────────────────────────────────── */
 
 * {
@@ -153,43 +154,6 @@ body {
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-}
-
-/* Atmosphere: a low-amplitude wash plus a hairline grid. Never flat. */
-.field {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 78% at 12% -12%, var(--accent-wash) 0%, transparent 46%),
-    radial-gradient(94% 62% at 96% 4%, rgb(57 135 229 / 0.07) 0%, transparent 52%),
-    linear-gradient(180deg, var(--page) 0%, var(--page-deep) 100%);
-}
-
-.field::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, var(--grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(126% 96% at 50% 0%, #000 8%, transparent 72%);
-  -webkit-mask-image: radial-gradient(126% 96% at 50% 0%, #000 8%, transparent 72%);
-  opacity: 0.55;
-}
-
-/* Numerals are always mono + tabular so columns of figures line up. */
-.tnum {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "zero" 1;
-  letter-spacing: -0.015em;
-}
-
-.hairline-t {
-  box-shadow: inset 0 1px 0 0 var(--line);
 }
 
 /* One focus treatment, everywhere. */
@@ -235,6 +199,45 @@ body {
 .recharts-curve.recharts-tooltip-cursor {
   stroke: var(--line-strong);
 }
+}
+
+@layer components {
+/* Atmosphere: a low-amplitude wash plus a hairline grid. Never flat. */
+.field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 78% at 12% -12%, var(--accent-wash) 0%, transparent 46%),
+    radial-gradient(94% 62% at 96% 4%, rgb(57 135 229 / 0.07) 0%, transparent 52%),
+    linear-gradient(180deg, var(--page) 0%, var(--page-deep) 100%);
+}
+
+.field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(126% 96% at 50% 0%, #000 8%, transparent 72%);
+  -webkit-mask-image: radial-gradient(126% 96% at 50% 0%, #000 8%, transparent 72%);
+  opacity: 0.55;
+}
+/* Numerals are always mono + tabular so columns of figures line up. */
+.tnum {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: -0.015em;
+}
+
+.hairline-t {
+  box-shadow: inset 0 1px 0 0 var(--line);
+}
+}
 
 @keyframes shimmer {
   100% {
@@ -242,6 +245,7 @@ body {
   }
 }
 
+@layer components {
 .skeleton {
   position: relative;
   overflow: hidden;
@@ -254,6 +258,7 @@ body {
   transform: translateX(-100%);
   background: linear-gradient(90deg, transparent, var(--line) 60%, transparent);
   animation: shimmer 1.6s infinite;
+}
 }
 
 @media (prefers-reduced-motion: reduce) {

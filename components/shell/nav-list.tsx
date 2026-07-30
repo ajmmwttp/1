@@ -39,15 +39,11 @@ export function NavList({
     >
       {NAV_GROUPS.map((group, gi) => (
         <div key={group} className="flex flex-col">
-          {collapsed ? (
-            gi > 0 ? (
-              <span
-                aria-hidden
-                className="mx-auto mb-2 h-px w-5 bg-[var(--line)]"
-              />
-            ) : null
-          ) : (
-            <AnimatePresence initial={false}>
+          {collapsed && gi > 0 && (
+            <span aria-hidden className="mx-auto mb-2 h-px w-5 bg-[var(--line)]" />
+          )}
+          <AnimatePresence initial={false}>
+            {!collapsed && (
               <motion.span
                 key="group-label"
                 initial={{ opacity: 0 }}
@@ -58,8 +54,8 @@ export function NavList({
               >
                 {group}
               </motion.span>
-            </AnimatePresence>
-          )}
+            )}
+          </AnimatePresence>
 
           <ul className="flex flex-col gap-0.5">
             {NAV_ITEMS.filter((item) => item.group === group).map((item) => (

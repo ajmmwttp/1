@@ -79,8 +79,8 @@ function KpiRowBody({ className }: { className?: string }) {
 
 export function KpiRowSkeleton({ className }: { className?: string }) {
   return (
-    <StatusRegion>
-      <KpiRowBody className={className} />
+    <StatusRegion className={className}>
+      <KpiRowBody />
     </StatusRegion>
   );
 }
@@ -184,7 +184,8 @@ export function ChartSkeleton({
 }: ChartSkeletonProps) {
   return (
     <StatusRegion className={className}>
-      <ChartBody height={height} bars={bars} />
+      {/* h-full so the card fills a stretched grid row, as the real card does */}
+      <ChartBody height={height} bars={bars} className="h-full" />
     </StatusRegion>
   );
 }
@@ -257,7 +258,7 @@ export interface TableSkeletonProps {
 export function TableSkeleton({ rows = 8, className }: TableSkeletonProps) {
   return (
     <StatusRegion className={className}>
-      <TableBody rows={rows} />
+      <TableBody rows={rows} className="h-full" />
     </StatusRegion>
   );
 }
