@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS, NAV_ITEMS, type NavItem } from "./nav-items";
-import { FADE_TRANSITION, SHELL_TRANSITION } from "./motion-tokens";
+import { FADE_TRANSITION, RAIL_TRANSITION } from "./motion-tokens";
 
 interface NavListProps {
   /** Icon-only rail. */
@@ -131,7 +131,7 @@ function NavRow({
       {active && (
         <motion.span
           layoutId={railId}
-          transition={SHELL_TRANSITION}
+          transition={RAIL_TRANSITION}
           aria-hidden
           className="absolute inset-y-1.5 left-0 z-10 w-[2px] rounded-full bg-[var(--accent)]"
         />

@@ -15,6 +15,7 @@ import {
 } from "recharts";
 
 import { Button } from "@/components/ui/button";
+import { REVEAL_STEPS } from "@/components/motion/ladder";
 import { series } from "@/lib/chart-theme";
 import { dataWindow, days, recordGap, type DayPoint } from "@/lib/data/warehouse";
 import { longDate, pct, shortDate } from "@/lib/format";
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 import { ChartFrame, ChartLegend } from "./chart-frame";
 import { ChartTooltip, type ChartTooltipRow } from "./chart-tooltip";
+import { usePlotWidth } from "./use-plot-width";
 
 /* ──────────────────────────────────────────────────────────────
    ThroughputChart — 日次の効率推移.
@@ -54,10 +56,35 @@ const LEGEND = [
   { color: series[2], label: "梱包効率" },
 ];
 
+/** Width the y-axis and the right margin take away from the plot box. */
+const AXIS_GUTTER = 54;
+/** "4/14" at 11px measures ~26px; 10px of air keeps the row from reading as one word. */
+const DATE_TICK_SLOT = 36;
+
+/**
+ * Density at desktop widths — unchanged, this is the tuned resting state.
+ */
 function tickInterval(n: number): number {
   if (n > 10) return 2;
   if (n > 7) return 1;
   return 0;
+}
+
+/**
+ * Thins the date axis until the labels fit, and never the other way: the
+ * result is `max(desktop interval, what the box can hold)`, so a narrow
+ * phone drops ticks while a wide card keeps the tuned spacing.
+ *
+ * Type size is left alone on purpose — 11px is already the floor the brief
+ * allows, so density is the only lever.
+ */
+function fittedInterval(n: number, plotWidth: number): number {
+  const roomy = tickInterval(n);
+  if (plotWidth <= 0) return roomy; // not measured yet — assume the wide case
+  const usable = Math.max(plotWidth - AXIS_GUTTER, 0);
+  const maxTicks = Math.max(Math.floor(usable / DATE_TICK_SLOT), 2);
+  if (n <= maxTicks) return roomy;
+  return Math.max(roomy, Math.ceil(n / maxTicks) - 1);
 }
 
 /** Recharts' y-domain tuple, kept out of the JSX so the cast stays in one place. */
@@ -89,6 +116,7 @@ function buildRows(datum: Record<string, unknown>): ChartTooltipRow[] {
 export function ThroughputChart() {
   const [rangeId, setRangeId] = React.useState<string>("all");
   const reduceMotion = useReducedMotion();
+  const [plotRef, plotWidth] = usePlotWidth();
 
   const range = RANGES.find((r) => r.id === rangeId) ?? RANGES[0];
 
@@ -107,8 +135,13 @@ export function ThroughputChart() {
     return { x1: inGap[0].date, x2: inGap[inGap.length - 1].date };
   }, [data]);
 
+  /* Below this the band is too slim to hold a centred caption clear of the
+     梱包 line, which keeps plotting straight through the gap. */
+  const narrowBand = plotWidth > 0 && plotWidth < 460;
+
   return (
     <ChartFrame
+      revealStep={REVEAL_STEPS.chartRow}
       title="日次の効率推移"
       description="標準時間 ÷ 実測時間。100 が標準どおり。"
       legend={<ChartLegend items={LEGEND} />}
@@ -125,7 +158,9 @@ export function ThroughputChart() {
                 aria-pressed={selected}
                 onClick={() => setRangeId(option.id)}
                 className={cn(
-                  "relative h-6 rounded-[6px] px-2 text-[11px] font-medium hover:bg-transparent",
+                  // 24px is a mouse-sized pill; a finger needs 40. Width is
+                  // already ≥49px for every label, so only height moves.
+                  "relative h-6 rounded-[6px] px-2 text-[11px] font-medium pointer-coarse:h-10 hover:bg-transparent",
                   selected
                     ? "text-[var(--ink)]"
                     : "text-[var(--ink-3)] hover:text-[var(--ink-2)]",
@@ -151,7 +186,14 @@ export function ThroughputChart() {
       }
       footer={`記録が揃っているのは ${shortDate(dataWindow.completeThrough)} まで（${dataWindow.completeDays}日分）。以降は PK 実働時間が未記録。`}
     >
-      <div className="h-[300px] w-full sm:h-[340px]">
+      {/* Heights step on the 4px rhythm. The dip at md is deliberate: from md
+          to lg this card is full-bleed, so it needs far less height than it
+          does in the 8-of-12 slot at xl to keep the same reading angle, and
+          the band between them was the emptiest part of the page. */}
+      <div
+        ref={plotRef}
+        className="h-[260px] w-full sm:h-[300px] md:h-[280px] xl:h-[340px]"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
@@ -193,7 +235,7 @@ export function ThroughputChart() {
               axisLine={false}
               tickMargin={10}
               minTickGap={4}
-              interval={tickInterval(data.length)}
+              interval={fittedInterval(data.length, plotWidth)}
               tick={{ fill: "var(--axis)", fontSize: 11 }}
             />
             <YAxis
@@ -215,11 +257,16 @@ export function ThroughputChart() {
                 fill={`url(#${GAP_HATCH})`}
                 fillOpacity={0.45}
                 stroke="none"
+                /* Centred, the caption lands on ~100% — exactly where the
+                   梱包 line runs through the gap. On a phone there is no room
+                   to dodge sideways, so it moves to the top of the band where
+                   nothing is plotted. */
                 label={{
                   value: "記録なし",
-                  position: "center",
+                  position: narrowBand ? "insideTop" : "center",
                   fill: "var(--ink-4)",
                   fontSize: 10.5,
+                  dy: narrowBand ? 4 : 0,
                 }}
               />
             ) : null}
@@ -247,6 +294,9 @@ export function ThroughputChart() {
               }
             />
 
+            {/* Recharts defaults to a 1500ms sweep, which lands long after the
+                card that holds it has finished appearing. 600ms keeps the
+                draw legible on a range switch without dragging the page. */}
             <Area
               type="monotone"
               dataKey="pickEff"
@@ -256,6 +306,9 @@ export function ThroughputChart() {
               fill={`url(#${PICK_FILL})`}
               connectNulls={false}
               dot={false}
+              isAnimationActive={!reduceMotion}
+              animationDuration={600}
+              animationEasing="ease-out"
               activeDot={{
                 r: 4,
                 fill: series[1],
@@ -272,6 +325,9 @@ export function ThroughputChart() {
               fill={`url(#${PACK_FILL})`}
               connectNulls={false}
               dot={false}
+              isAnimationActive={!reduceMotion}
+              animationDuration={600}
+              animationEasing="ease-out"
               activeDot={{
                 r: 4,
                 fill: series[2],

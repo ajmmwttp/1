@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Reveal } from "@/components/motion/reveal";
 import { cn } from "@/lib/utils";
 
 /* ──────────────────────────────────────────────────────────────
@@ -65,6 +66,8 @@ export interface ChartFrameProps {
   contentClassName?: string;
   /** Legend row alignment. Defaults to the start edge, under the title. */
   legendAlign?: "start" | "end";
+  /** Step on the shared entrance ladder — see REVEAL_STEPS. */
+  revealStep: number;
   children: React.ReactNode;
 }
 
@@ -77,34 +80,45 @@ export function ChartFrame({
   className,
   contentClassName,
   legendAlign = "start",
+  revealStep,
   children,
 }: ChartFrameProps) {
   return (
-    <Card className={cn("flex flex-col overflow-hidden", className)}>
-      <CardHeader className={legend ? "pb-2" : undefined}>
-        <div className="min-w-0">
-          <CardTitle>{title}</CardTitle>
-          {description ? <CardDescription>{description}</CardDescription> : null}
-        </div>
-        {action ? <div className="shrink-0 pt-0.5">{action}</div> : null}
-      </CardHeader>
+    <Reveal step={revealStep}>
+      <Card
+        className={cn(
+          "flex flex-col overflow-hidden",
+          // Hover: a hairline lift, nothing else. No scale, no shadow bloom —
+          // a card the cursor merely passes over should not move.
+          "transition-colors duration-150 ease-out hover:border-[var(--line-strong)]",
+          className,
+        )}
+      >
+        <CardHeader className={legend ? "pb-2" : undefined}>
+          <div className="min-w-0">
+            <CardTitle>{title}</CardTitle>
+            {description ? <CardDescription>{description}</CardDescription> : null}
+          </div>
+          {action ? <div className="shrink-0 pt-0.5">{action}</div> : null}
+        </CardHeader>
 
-      {legend ? (
-        <div
-          className={cn(
-            "flex px-5 pb-3",
-            legendAlign === "end" ? "justify-end" : "justify-start",
-          )}
-        >
-          {legend}
-        </div>
-      ) : null}
+        {legend ? (
+          <div
+            className={cn(
+              "flex px-5 pb-3",
+              legendAlign === "end" ? "justify-end" : "justify-start",
+            )}
+          >
+            {legend}
+          </div>
+        ) : null}
 
-      <CardContent className={cn("flex-1", contentClassName)}>
-        {children}
-      </CardContent>
+        <CardContent className={cn("flex-1", contentClassName)}>
+          {children}
+        </CardContent>
 
-      {footer ? <CardFooter>{footer}</CardFooter> : null}
-    </Card>
+        {footer ? <CardFooter>{footer}</CardFooter> : null}
+      </Card>
+    </Reveal>
   );
 }

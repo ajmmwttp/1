@@ -10,6 +10,7 @@ import {
   type PieSectorShapeProps,
 } from "recharts";
 
+import { REVEAL_STEPS } from "@/components/motion/ladder";
 import { series, SERIES_ORDER } from "@/lib/chart-theme";
 import { timeMix, totals, type MixSlice } from "@/lib/data/warehouse";
 import { dec, hours, minutesToHours, pct } from "@/lib/format";
@@ -95,11 +96,18 @@ export function TimeMixChart() {
 
   return (
     <ChartFrame
+      revealStep={REVEAL_STEPS.chartRow}
       title="ピッキング時間の内訳"
       description={`${dec(PICK_HOURS, 0)}時間を作業単位で分解。手を動かしているのは3割だけ。`}
       footer="段取りは1社ごとに一度だけ発生します。件数で割ると人の速さに見えてしまう部分です。"
     >
-      <div className="relative h-[260px] w-full">
+      {/* md → lg is the band where this card is full-bleed: at xl it sits in
+          4 of 12 and the stack is right, but from md to lg the same stack left
+          a 260px donut floating in a ~680px box with the legend stranded
+          underneath. Splitting it 5/7 on the same 12-column vocabulary fills
+          that band and takes ~150px of dead height off the page. */}
+      <div className="grid grid-cols-1 items-center gap-4 md:grid-cols-12 xl:grid-cols-1">
+      <div className="relative h-[260px] w-full md:col-span-5 xl:col-span-1">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -113,6 +121,11 @@ export function TimeMixChart() {
               stroke="var(--card)"
               strokeWidth={2}
               shape={renderSector}
+              // The donut arrives with its card and nothing else. Recharts
+              // sweeps the angles over 1500ms by default, and because the
+              // sectors re-render on every hover that sweep can restart under
+              // the cursor. The card's own reveal is the entrance here.
+              isAnimationActive={false}
               onMouseEnter={(_, index: number) => setActiveIndex(index)}
               onMouseLeave={() => setActiveIndex(null)}
             >
@@ -133,7 +146,7 @@ export function TimeMixChart() {
         </div>
       </div>
 
-      <ul className="mt-3 flex flex-col gap-0.5">
+      <ul className="mt-3 flex flex-col gap-0.5 md:col-span-7 md:mt-0 xl:col-span-1 xl:mt-3">
         {DATA.map((slice, index) => (
           <li
             key={slice.label}

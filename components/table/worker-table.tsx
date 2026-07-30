@@ -5,6 +5,8 @@ import { ChevronDown, ChevronUp, Info, SearchX } from "lucide-react";
 import type { Role, Verdict } from "@/lib/data/warehouse";
 import { dec, int } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { REVEAL_STEPS } from "@/components/motion/ladder";
+import { Reveal } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -139,9 +141,14 @@ function Cell({ row, column }: { row: PickRow; column: Column }) {
     case "rank":
       return (
         <td className={cn(base, "relative pr-1 pl-3")}>
+          {/* Grows from the vertical centre rather than fading: a rail that
+              fades reads as a highlight appearing, one that draws itself
+              reads as the row being picked out. 180ms on the expo curve.
+              Reduced motion zeroes the duration in globals.css — the rail
+              still marks the row, it just arrives at once. */}
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-[var(--accent)] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 group-aria-selected:opacity-100"
+            className="pointer-events-none absolute inset-y-0 left-0 w-[2px] origin-center scale-y-0 bg-[var(--accent)] transition-transform duration-[180ms] ease-[var(--ease-out-expo)] group-hover:scale-y-100 group-focus-visible:scale-y-100 group-aria-selected:scale-y-100"
           />
           <span className="tnum text-[var(--ink-4)]">{row.rank}</span>
         </td>
@@ -278,82 +285,85 @@ export function WorkerTable() {
 
   return (
     <TooltipProvider delayDuration={120}>
-      <Card>
-        <CardHeader className="flex-col items-stretch gap-0">
-          <div>
-            <CardTitle>担当者ランキング（ピッキング）</CardTitle>
-            <CardDescription>
-              縮小後効率で順位づけ。記録日数が少ない人のブレを平均側へ寄せています。
-            </CardDescription>
-          </div>
-          <div className="mt-4">
-            <TableToolbar
-              query={query}
-              onQueryChange={setQuery}
-              verdicts={verdicts}
-              onToggleVerdict={toggleVerdict}
-              roles={roles}
-              onToggleRole={toggleRole}
-              activeCount={activeCount}
-              onClear={clear}
-            />
-          </div>
-        </CardHeader>
+      <Reveal step={REVEAL_STEPS.table}>
+        <Card>
+          <CardHeader className="flex-col items-stretch gap-0">
+            <div>
+              <CardTitle>担当者ランキング（ピッキング）</CardTitle>
+              <CardDescription>
+                縮小後効率で順位づけ。記録日数が少ない人のブレを平均側へ寄せています。
+              </CardDescription>
+            </div>
+            <div className="mt-4">
+              <TableToolbar
+                query={query}
+                onQueryChange={setQuery}
+                verdicts={verdicts}
+                onToggleVerdict={toggleVerdict}
+                roles={roles}
+                onToggleRole={toggleRole}
+                activeCount={activeCount}
+                onClear={clear}
+              />
+            </div>
+          </CardHeader>
 
-        <CardContent className="px-0 pb-0">
-          <div className="max-h-[560px] overflow-auto">
-            <table className="w-full min-w-[880px] border-separate border-spacing-0 text-[12.5px]">
-              <caption className="sr-only">
-                ピッキング担当者26名の件数・企業数・件/社・素の秒/件・純速度・効率・判定。既定は効率の降順。
-              </caption>
-              <thead>
-                <tr>
-                  {COLUMNS.map((c) => (
-                    <HeaderCell key={c.id} column={c} sort={sort} onToggle={toggle} />
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.length === 0 && <EmptyRow onClear={clear} />}
-                {sorted.map((row) => (
-                  <tr
-                    key={row.name}
-                    tabIndex={0}
-                    aria-selected={selected === row.name}
-                    aria-label={`${row.rank}位 ${row.name}、${roleLabel(row.role)}、件数${int(
-                      row.pick.items,
-                    )}件、企業数${int(row.pick.companies)}社、効率${dec(row.pick.shrunk, 1)}%、判定${
-                      row.verdict
-                    }`}
-                    onClick={() => setSelected((s) => (s === row.name ? null : row.name))}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        setSelected((s) => (s === row.name ? null : row.name));
-                      } else if (e.key === "Escape") {
-                        setSelected(null);
-                      }
-                    }}
-                    className="group cursor-default transition-colors duration-150 hover:bg-[var(--elevated)] focus-visible:bg-[var(--elevated)] aria-selected:bg-[var(--elevated)]"
-                  >
+          <CardContent className="px-0 pb-0">
+            <div className="max-h-[560px] overflow-auto">
+              <table className="w-full min-w-[880px] border-separate border-spacing-0 text-[12.5px]">
+                <caption className="sr-only">
+                  ピッキング担当者26名の件数・企業数・件/社・素の秒/件・純速度・効率・判定。既定は効率の降順。
+                </caption>
+                <thead>
+                  <tr>
                     {COLUMNS.map((c) => (
-                      <Cell key={c.id} row={row} column={c} />
+                      <HeaderCell key={c.id} column={c} sort={sort} onToggle={toggle} />
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
+                </thead>
+                <tbody>
+                  {sorted.length === 0 && <EmptyRow onClear={clear} />}
+                  {sorted.map((row) => (
+                    <tr
+                      key={row.name}
+                      tabIndex={0}
+                      aria-selected={selected === row.name}
+                      aria-label={`${row.rank}位 ${row.name}、${roleLabel(row.role)}、件数${int(
+                        row.pick.items,
+                      )}件、企業数${int(row.pick.companies)}社、効率${dec(row.pick.shrunk, 1)}%、判定${
+                        row.verdict
+                      }`}
+                      onClick={() => setSelected((s) => (s === row.name ? null : row.name))}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          setSelected((s) => (s === row.name ? null : row.name));
+                        } else if (e.key === "Escape") {
+                          setSelected(null);
+                        }
+                      }}
+                      className="group cursor-default transition-colors duration-150 hover:bg-[var(--elevated)] focus-visible:bg-[var(--elevated)] aria-selected:bg-[var(--elevated)]"
+                    >
+                      {COLUMNS.map((c) => (
+                        <Cell key={c.id} row={row} column={c} />
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
 
-        <CardFooter className="justify-between gap-4">
-          <span>
-            全<span className="tnum">{TOTAL}</span>名中 <span className="tnum">{sorted.length}</span>
-            名を表示
-          </span>
-          <span className="text-[var(--ink-4)]">効率 = 標準時間 ÷ 実測時間 × 100</span>
-        </CardFooter>
-      </Card>
+          <CardFooter className="justify-between gap-4">
+            <span>
+              全<span className="tnum">{TOTAL}</span>名中{" "}
+              <span className="tnum">{sorted.length}</span>
+              名を表示
+            </span>
+            <span className="text-[var(--ink-4)]">効率 = 標準時間 ÷ 実測時間 × 100</span>
+          </CardFooter>
+        </Card>
+      </Reveal>
     </TooltipProvider>
   );
 }

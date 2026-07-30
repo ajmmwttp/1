@@ -9,9 +9,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { signedPct } from "@/lib/format";
+import { dec, int, signedPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Sparkline, type SparkTone } from "./sparkline";
+import { useCountUp } from "./use-count-up";
 
 /* ────────────────────────────────────────────────────────────────
    TONE vs INVERT — the thing that is easy to get wrong.
@@ -68,6 +69,16 @@ export type StatTileProps = {
   hint?: string;
   /** One short line of provenance under the delta. */
   footnote?: string;
+  /**
+   * Raw figure behind `value`. Present ⇒ the tile counts 0 → this on first
+   * mount only. A formatter cannot be passed (the caller is a server
+   * component), so the tile re-formats with `countDecimals` and lands on the
+   * `value` string it was given.
+   */
+  countTo?: number;
+  countDecimals?: number;
+  /** Aligns the count with this tile's step on the entrance ladder, in ms. */
+  countDelay?: number;
   className?: string;
 };
 
@@ -96,8 +107,19 @@ export function StatTile({
   judged = true,
   hint,
   footnote,
+  countTo,
+  countDecimals = 1,
+  countDelay = 0,
   className,
 }: StatTileProps) {
+  const counting = useCountUp(countTo ?? null, countDelay);
+  const counted =
+    counting === null
+      ? null
+      : countDecimals === 0
+        ? int(counting)
+        : dec(counting, countDecimals);
+
   const sentiment: Sentiment =
     !judged || tone === "neutral"
       ? "neutral"
@@ -156,12 +178,22 @@ export function StatTile({
 
       <div className="mt-3 flex items-baseline gap-1">
         <span
-          className="tnum text-[32px] leading-none font-medium text-[var(--ink)]"
+          className="tnum relative inline-flex text-[32px] leading-none font-medium text-[var(--ink)]"
           // Inline: globals.css sets .tnum letter-spacing outside Tailwind's
           // layers, so a tracking-* utility would lose to it.
           style={{ letterSpacing: "-0.02em" }}
         >
-          {value}
+          {/* The final string always holds the box — tabular figures keep the
+              digits aligned, but only the finished string can reserve the
+              right WIDTH, so the unit beside it never gets nudged. */}
+          <span className={counted === null ? undefined : "opacity-0"}>
+            {value}
+          </span>
+          {counted !== null ? (
+            <span aria-hidden className="absolute top-0 left-0">
+              {counted}
+            </span>
+          ) : null}
         </span>
         {unit ? (
           <span className="text-[13px] leading-none text-[var(--ink-3)]">{unit}</span>

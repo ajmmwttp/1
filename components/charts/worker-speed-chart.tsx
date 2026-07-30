@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "framer-motion";
 import {
   Bar,
   BarChart,
@@ -10,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { REVEAL_STEPS } from "@/components/motion/ladder";
 import { MARK, series } from "@/lib/chart-theme";
 import { workers } from "@/lib/data/warehouse";
 import { dec, int } from "@/lib/format";
@@ -85,8 +87,11 @@ function buildRows(datum: Record<string, unknown>): ChartTooltipRow[] {
 }
 
 export function WorkerSpeedChart() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <ChartFrame
+      revealStep={REVEAL_STEPS.barChart}
       title="ピッキング速度：素の秒/件 と 純速度"
       description="素の秒/件は、1社1個のリストを多く引いた人ほど不利に出ます。純速度は段取りを除いた実力です。"
       legend={<ChartLegend items={LEGEND} />}
@@ -132,12 +137,17 @@ export function WorkerSpeedChart() {
               content={<ChartTooltip rows={buildRows} />}
             />
 
+            {/* 600ms, not the 1500ms default: the bars should finish growing
+                while the card is still settling, not a second after it. */}
             <Bar
               dataKey="raw"
               name="素の秒/件"
               fill={series[2]}
               barSize={9}
               radius={MARK.barRadiusH}
+              isAnimationActive={!reduceMotion}
+              animationDuration={600}
+              animationEasing="ease-out"
             />
             <Bar
               dataKey="pure"
@@ -145,6 +155,9 @@ export function WorkerSpeedChart() {
               fill={series[1]}
               barSize={9}
               radius={MARK.barRadiusH}
+              isAnimationActive={!reduceMotion}
+              animationDuration={600}
+              animationEasing="ease-out"
             />
           </BarChart>
         </ResponsiveContainer>
