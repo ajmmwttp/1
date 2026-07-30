@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
    ChartTooltip — the single tooltip surface for every chart.
 
    Recharts 3 types its injected content props loosely (payload is
-   `any[]`), so we declare a narrow shape of our own and cast once,
-   at the boundary, inside `tooltipContent()`. Nothing downstream
-   sees an untyped value.
+   `any[]`), so this component declares its own narrow props and does
+   the one and only cast at the boundary — the datum is narrowed to
+   Record<string, unknown> and every field is checked before use.
+   Nothing downstream ever sees an untyped value.
    ────────────────────────────────────────────────────────────── */
 
 /** The slice of a Recharts payload entry we actually read. */
@@ -118,15 +119,4 @@ export function ChartTooltip({
       </div>
     </div>
   );
-}
-
-/**
- * Boundary cast. Recharts' `content` prop is typed against its own loose
- * `TooltipContentProps`; this hands it an element with our narrow props
- * without leaking `any` into the charts.
- */
-export function tooltipContent(
-  props: Omit<ChartTooltipProps, "active" | "label" | "payload">,
-): React.ReactElement {
-  return <ChartTooltip {...props} />;
 }
