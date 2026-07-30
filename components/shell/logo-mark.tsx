@@ -51,10 +51,10 @@ export function LedgerMark({ className }: { className?: string }) {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("flex items-center gap-1.5", className)}>
-      <span className="font-sans text-[13.5px] font-semibold tracking-[-0.015em] text-[var(--ink)]">
+      <span className="font-sans text-[12px] font-semibold tracking-[-0.015em] text-[var(--ink)]">
         Ledger
       </span>
-      <span className="rounded-[4px] border border-[var(--accent-line)] bg-[var(--accent-wash)] px-1 py-px font-sans text-[9px] font-semibold uppercase leading-[1.35] tracking-[0.12em] text-[var(--accent)]">
+      <span className="rounded-[4px] border border-[var(--accent-line)] bg-[var(--accent-wash)] px-1 py-px font-sans text-[12px] font-semibold uppercase leading-[1.35] tracking-[0.12em] text-[var(--accent)]">
         OPS
       </span>
     </span>

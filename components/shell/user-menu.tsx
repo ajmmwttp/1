@@ -52,10 +52,10 @@ export function UserMenu({ variant = "full", className }: UserMenuProps) {
           {isFull && (
             <>
               <span className="flex min-w-0 flex-1 flex-col whitespace-nowrap">
-                <span className="truncate text-[12.5px] font-medium leading-[1.35] text-[var(--ink)]">
+                <span className="truncate text-[12px] font-medium leading-[1.35] text-[var(--ink)]">
                   {USER.name}
                 </span>
-                <span className="truncate text-[10.5px] leading-[1.35] text-[var(--ink-3)]">
+                <span className="truncate text-[12px] leading-[1.35] text-[var(--ink-3)]">
                   {USER.role}
                 </span>
               </span>
@@ -71,10 +71,10 @@ export function UserMenu({ variant = "full", className }: UserMenuProps) {
         className="w-56"
       >
         <DropdownMenuLabel className="flex flex-col gap-0.5 normal-case tracking-normal">
-          <span className="text-[12.5px] font-medium text-[var(--ink)]">
+          <span className="text-[12px] font-medium text-[var(--ink)]">
             {USER.name}
           </span>
-          <span className="text-[10.5px] text-[var(--ink-3)]">{USER.role}</span>
+          <span className="text-[12px] text-[var(--ink-3)]">{USER.role}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

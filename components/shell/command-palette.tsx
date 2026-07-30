@@ -174,16 +174,16 @@ export function CommandPalette({
               placeholder="担当者・工程を検索"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              className="h-12 rounded-none border-0 bg-transparent px-0 text-[13px] hover:border-0 focus:bg-transparent"
+              className="h-12 rounded-none border-0 bg-transparent px-0 text-[12px] hover:border-0 focus:bg-transparent"
             />
-            <kbd className="hidden shrink-0 rounded-[4px] border border-[var(--line)] bg-[var(--elevated)] px-1.5 py-0.5 text-[10px] text-[var(--ink-4)] sm:inline-block">
+            <kbd className="hidden shrink-0 rounded-[4px] border border-[var(--line)] bg-[var(--elevated)] px-1.5 py-0.5 text-[12px] text-[var(--ink-4)] sm:inline-block">
               esc
             </kbd>
           </div>
 
           <div ref={listRef} className="max-h-[46vh] overflow-y-auto p-1.5">
             {rows.length === 0 && (
-              <p className="px-2.5 py-6 text-center text-[12.5px] text-[var(--ink-3)]">
+              <p className="px-2.5 py-6 text-center text-[12px] text-[var(--ink-3)]">
                 該当する項目がありません
               </p>
             )}
@@ -194,7 +194,7 @@ export function CommandPalette({
               return (
                 <React.Fragment key={row.key}>
                   {showHeader && (
-                    <div className="px-2.5 pb-1 pt-2 text-[10.5px] uppercase tracking-[0.09em] text-[var(--ink-4)]">
+                    <div className="px-2.5 pb-1 pt-2 text-[12px] uppercase tracking-[0.09em] text-[var(--ink-4)]">
                       {GROUP_LABEL[row.kind]}
                     </div>
                   )}
@@ -204,7 +204,7 @@ export function CommandPalette({
                     onMouseMove={() => setIndex(i)}
                     onClick={() => select(row)}
                     className={cn(
-                      "relative flex h-9 w-full items-center gap-2.5 rounded-[8px] px-2.5 text-left text-[12.5px] outline-none transition-colors duration-100",
+                      "relative flex h-9 w-full items-center gap-2.5 rounded-[8px] px-2.5 text-left text-[12px] outline-none transition-colors duration-100",
                       "pointer-coarse:h-11",
                       activeRow
                         ? "bg-[var(--elevated)] text-[var(--ink)]"
@@ -223,12 +223,12 @@ export function CommandPalette({
                         strokeWidth={1.75}
                       />
                     ) : (
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[var(--sunken)] text-[9px] leading-none text-[var(--ink-3)]">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[var(--sunken)] text-[12px] leading-none text-[var(--ink-3)]">
                         {row.label.slice(0, 1)}
                       </span>
                     )}
                     <span className="truncate">{row.label}</span>
-                    <span className="ml-auto flex shrink-0 items-center gap-2 text-[10.5px] text-[var(--ink-4)]">
+                    <span className="ml-auto flex shrink-0 items-center gap-2 text-[12px] text-[var(--ink-4)]">
                       <span className="hidden sm:inline">{row.meta}</span>
                       {row.kind === "worker" && row.efficiency !== null && (
                         <span>
@@ -248,7 +248,7 @@ export function CommandPalette({
             })}
           </div>
 
-          <div className="flex items-center justify-between border-t border-[var(--line)] bg-[var(--sunken)] px-3.5 py-2 text-[10.5px] text-[var(--ink-4)]">
+          <div className="flex items-center justify-between border-t border-[var(--line)] bg-[var(--sunken)] px-3.5 py-2 text-[12px] text-[var(--ink-4)]">
             <span className="flex items-center gap-3">
               <span>
                 <kbd className="text-[var(--ink-3)]">↑↓</kbd> 移動

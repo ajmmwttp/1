@@ -35,7 +35,7 @@ export const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-[6px] px-2 py-1.5 text-[12.5px] text-[var(--ink-2)] outline-none transition-colors",
+      "relative flex cursor-default select-none items-center gap-2 rounded-[6px] px-2 py-1.5 text-[12px] text-[var(--ink-2)] outline-none transition-colors",
       "focus:bg-[var(--elevated)] focus:text-[var(--ink)] data-[disabled]:pointer-events-none data-[disabled]:opacity-45",
       "[&_svg]:size-3.5 [&_svg]:shrink-0",
       className,
@@ -53,7 +53,7 @@ export const DropdownMenuCheckboxItem = React.forwardRef<
     ref={ref}
     checked={checked}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-[6px] py-1.5 pl-7 pr-2 text-[12.5px] text-[var(--ink-2)] outline-none transition-colors",
+      "relative flex cursor-default select-none items-center gap-2 rounded-[6px] py-1.5 pl-7 pr-2 text-[12px] text-[var(--ink-2)] outline-none transition-colors",
       "focus:bg-[var(--elevated)] focus:text-[var(--ink)] data-[disabled]:pointer-events-none data-[disabled]:opacity-45",
       className,
     )}
@@ -76,7 +76,7 @@ export const DropdownMenuLabel = React.forwardRef<
   <DropdownMenuPrimitive.Label
     ref={ref}
     className={cn(
-      "px-2 py-1.5 text-[10.5px] font-medium uppercase tracking-[0.09em] text-[var(--ink-4)]",
+      "px-2 py-1.5 text-[12px] font-medium uppercase tracking-[0.09em] text-[var(--ink-4)]",
       className,
     )}
     {...props}

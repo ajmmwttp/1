@@ -36,8 +36,8 @@ type Sentiment = "good" | "bad" | "neutral";
 
 /** Chip ink. Neutral stays in the ink ramp so only true verdicts carry colour. */
 const SENTIMENT_INK: Record<Sentiment, string> = {
-  good: "var(--good)",
-  bad: "var(--critical)",
+  good: "var(--good-text)",
+  bad: "var(--critical-text)",
   neutral: "var(--ink-2)",
 };
 
@@ -135,7 +135,7 @@ export function StatTile({
   const DeltaIcon = dir > 0 ? ArrowUpRight : dir < 0 ? ArrowDownRight : Minus;
 
   return (
-    <Card
+    <Card data-card
       className={cn(
         "group relative overflow-hidden p-4",
         "transition-[border-color,box-shadow] duration-150 ease-out",
@@ -154,7 +154,7 @@ export function StatTile({
       {/* min-h holds the row at its mouse height once the hint button leaves
           the flow on coarse pointers, so the figure below never shifts. */}
       <div className="flex min-h-5 items-start justify-between gap-2">
-        <span className="text-[10.5px] leading-none font-medium tracking-[0.09em] text-[var(--ink-4)] uppercase">
+        <span className="text-[12px] leading-none font-medium tracking-[0.09em] text-[var(--ink-4)] uppercase">
           {label}
         </span>
 
@@ -188,7 +188,7 @@ export function StatTile({
 
       <div className="mt-3 flex items-baseline gap-1">
         <span
-          className="tnum relative inline-flex text-[32px] leading-none font-medium text-[var(--ink)]"
+          className="tnum relative inline-flex text-[30px] leading-none font-medium text-[var(--ink)]"
           // Inline: globals.css sets .tnum letter-spacing outside Tailwind's
           // layers, so a tracking-* utility would lose to it.
           style={{ letterSpacing: "-0.02em" }}
@@ -206,7 +206,7 @@ export function StatTile({
           ) : null}
         </span>
         {unit ? (
-          <span className="text-[13px] leading-none text-[var(--ink-3)]">{unit}</span>
+          <span className="text-[12px] leading-none text-[var(--ink-3)]">{unit}</span>
         ) : null}
       </div>
 
@@ -215,7 +215,7 @@ export function StatTile({
           {/* Never colour alone: the arrow glyph and the printed sign both
               carry the direction, and 前週比 names the comparison. */}
           <span
-            className="inline-flex items-center gap-1 rounded-[6px] px-1.5 py-[3px] text-[11.5px] leading-none"
+            className="inline-flex items-center gap-1 rounded-[6px] px-1.5 py-[3px] text-[12px] leading-none"
             style={{
               color: ink,
               backgroundColor: `color-mix(in oklab, ${ink} 8%, transparent)`,
@@ -229,7 +229,7 @@ export function StatTile({
           </span>
 
           {footnote ? (
-            <p className="mt-1.5 truncate text-[11px] leading-none text-[var(--ink-4)]">
+            <p className="mt-1.5 text-[12px] leading-4 text-balance text-[var(--ink-3)]">
               {tnum(footnote)}
             </p>
           ) : null}

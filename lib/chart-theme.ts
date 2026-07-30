@@ -32,7 +32,7 @@ export const status = {
 
 export const axis = {
   stroke: "var(--grid)",
-  tick: { fill: "var(--axis)", fontSize: 11 },
+  tick: { fill: "var(--axis)", fontSize: 12 },
   line: false as const,
 };
 

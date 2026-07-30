@@ -14,10 +14,10 @@ export function SetupStat() {
   return (
     <div className="flex flex-col gap-1.5 whitespace-nowrap px-3 py-3">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[10.5px] uppercase tracking-[0.09em] text-[var(--ink-4)]">
+        <span className="text-[12px] uppercase tracking-[0.09em] text-[var(--ink-4)]">
           段取り比率
         </span>
-        <span className="tnum text-[13px] font-medium leading-none text-[var(--ink)]">
+        <span className="tnum text-[12px] font-medium leading-none text-[var(--ink)]">
           {dec(totals.pickSetupRatio, 1)}%
         </span>
       </div>
@@ -33,7 +33,7 @@ export function SetupStat() {
           className="h-full rounded-full bg-[var(--accent)]"
         />
       </div>
-      <span className="text-[10.5px] leading-none text-[var(--ink-4)]">
+      <span className="text-[12px] leading-none text-[var(--ink-4)]">
         ピッキング実働のうち段取り
       </span>
     </div>

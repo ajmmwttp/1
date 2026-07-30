@@ -45,7 +45,7 @@ const FilterTrigger = React.forwardRef<HTMLButtonElement, FilterTriggerProps>(
     >
       {label}
       {selected < total && (
-        <span className="tnum text-[11px] text-[var(--accent)]">
+        <span className="tnum text-[12px] text-[var(--accent)]">
           {selected}/{total}
         </span>
       )}

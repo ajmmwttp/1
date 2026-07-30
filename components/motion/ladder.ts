@@ -23,10 +23,12 @@ export const REVEAL_STEP = 0.04;
 export const REVEAL_STEPS = {
   /** Add the tile index (0–3). The section lede shares tile 0's beat. */
   kpiTile: 0,
+  /** The scatter pair — the argument, so it reveals right after the KPIs. */
+  scatterRow: 4,
   /** 日次の効率推移 + ピッキング時間の内訳 — one row, one beat. */
-  chartRow: 4,
-  barChart: 5,
-  table: 6,
+  chartRow: 5,
+  barChart: 6,
+  table: 7,
 } as const;
 
 export const revealDelay = (step: number) => step * REVEAL_STEP;

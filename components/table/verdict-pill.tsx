@@ -11,7 +11,7 @@ const STYLES: Record<Verdict, { Icon: LucideIcon; className: string }> = {
   上位: {
     Icon: ArrowUp,
     className:
-      "border-[color-mix(in_srgb,var(--good)_26%,transparent)] bg-[color-mix(in_srgb,var(--good)_11%,transparent)] text-[var(--good)]",
+      "border-[color-mix(in_srgb,var(--good-text)_26%,transparent)] bg-[color-mix(in_srgb,var(--good-text)_11%,transparent)] text-[var(--good-text)]",
   },
   標準: {
     Icon: Minus,
@@ -20,7 +20,7 @@ const STYLES: Record<Verdict, { Icon: LucideIcon; className: string }> = {
   要支援: {
     Icon: TriangleAlert,
     className:
-      "border-[color-mix(in_srgb,var(--critical)_26%,transparent)] bg-[color-mix(in_srgb,var(--critical)_11%,transparent)] text-[var(--critical)]",
+      "border-[color-mix(in_srgb,var(--critical-text)_26%,transparent)] bg-[color-mix(in_srgb,var(--critical-text)_11%,transparent)] text-[var(--critical-text)]",
   },
 };
 
@@ -29,7 +29,7 @@ export function VerdictPill({ verdict, className }: { verdict: Verdict; classNam
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-[6px] border px-1.5 py-[3px] text-[11px] font-medium leading-none whitespace-nowrap",
+        "inline-flex items-center gap-1 rounded-[6px] border px-1.5 py-[3px] text-[12px] font-medium leading-none whitespace-nowrap",
         tone,
         className,
       )}

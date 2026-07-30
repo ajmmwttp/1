@@ -97,7 +97,7 @@ export function WorkerSpeedChart() {
       legend={<ChartLegend items={LEGEND} />}
       legendAlign="end"
       action={
-        <span className="text-[10.5px] uppercase tracking-[0.09em] text-[var(--ink-4)]">
+        <span className="text-[12px] uppercase tracking-[0.09em] text-[var(--ink-4)]">
           秒 / 件
         </span>
       }
@@ -119,7 +119,7 @@ export function WorkerSpeedChart() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tick={{ fill: "var(--axis)", fontSize: 11 }}
+              tick={{ fill: "var(--axis)", fontSize: 12 }}
               tickFormatter={(value: number) => String(Math.round(value))}
             />
             <YAxis
@@ -129,7 +129,7 @@ export function WorkerSpeedChart() {
               tickLine={false}
               axisLine={false}
               tickMargin={6}
-              tick={{ fill: "var(--ink-2)", fontSize: 11 }}
+              tick={{ fill: "var(--ink-2)", fontSize: 12 }}
             />
 
             <Tooltip

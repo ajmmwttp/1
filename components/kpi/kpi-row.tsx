@@ -33,7 +33,7 @@ const pickEffSeries = days
 
 export function KpiRow() {
   return (
-    <section aria-label="主要指標" data-probe={JSON.stringify(REVEAL_STEPS)}>
+    <section data-kpi-row data-section aria-label="主要指標" data-probe={JSON.stringify(REVEAL_STEPS)}>
       {/* Entrance ladder: the lede shares the first tile's beat, then one
           40ms step per tile. Delays are hard-coded here because page.tsx is
           a server component and cannot orchestrate. */}
@@ -42,7 +42,7 @@ export function KpiRow() {
           aria-hidden
           className="size-[6px] shrink-0 rounded-[1px] bg-[var(--accent)]"
         />
-        <p className="text-[12.5px] leading-[1.5] text-[var(--ink-2)]">
+        <p className="text-[12px] leading-[1.5] text-[var(--ink-2)]">
           1社ごとの段取りが{" "}
           <span className="tnum text-[var(--ink)]">{dec(setupHours, 1)}</span>{" "}
           時間。ピッキング総時間の{" "}
@@ -53,7 +53,7 @@ export function KpiRow() {
         </p>
       </Reveal>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Reveal step={REVEAL_STEPS.kpiTile + 0} className="h-full">
           <StatTile
             label="総処理件数"

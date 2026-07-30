@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <MotionConfig reducedMotion="user">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:flex focus:h-8 focus:items-center focus:rounded-[8px] focus:border focus:border-[var(--accent-line)] focus:bg-[var(--card)] focus:px-3 focus:text-[12.5px] focus:font-medium focus:text-[var(--ink)] focus:shadow-[var(--shadow-pop)]"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:flex focus:h-8 focus:items-center focus:rounded-[8px] focus:border focus:border-[var(--accent-line)] focus:bg-[var(--card)] focus:px-3 focus:text-[12px] focus:font-medium focus:text-[var(--ink)] focus:shadow-[var(--shadow-pop)]"
         >
           本文へスキップ
         </a>

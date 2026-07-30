@@ -44,7 +44,7 @@ export function ErrorState({
         </div>
 
         {digest ? (
-          <p className="tnum text-[11px] leading-none text-[var(--ink-4)]">
+          <p className="tnum text-[12px] leading-none text-[var(--ink-4)]">
             エラーID: {digest}
           </p>
         ) : null}

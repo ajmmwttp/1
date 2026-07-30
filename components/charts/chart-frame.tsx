@@ -45,7 +45,7 @@ export function ChartLegend({ items, className }: ChartLegendProps) {
             className="size-2 shrink-0 rounded-[3px]"
             style={{ backgroundColor: item.color }}
           />
-          <span className="text-[11px] leading-none text-[var(--ink-2)]">
+          <span className="text-[12px] leading-none text-[var(--ink-2)]">
             {item.label}
           </span>
         </li>
@@ -68,6 +68,13 @@ export interface ChartFrameProps {
   legendAlign?: "start" | "end";
   /** Step on the shared entrance ladder — see REVEAL_STEPS. */
   revealStep: number;
+  /**
+   * Opt into row-level alignment with sibling cards. The card claims four
+   * subgrid rows (header / legend / plot / footer) so a title that wraps in
+   * one card cannot push its plot out of line with the card beside it.
+   * Empty slots still render, otherwise the row counts diverge.
+   */
+  subgrid?: boolean;
   children: React.ReactNode;
 }
 
@@ -81,13 +88,22 @@ export function ChartFrame({
   contentClassName,
   legendAlign = "start",
   revealStep,
+  subgrid = false,
   children,
 }: ChartFrameProps) {
   return (
-    <Reveal step={revealStep}>
+    // The Reveal wrapper is the grid child, so it has to stretch too —
+    // otherwise the Card cannot fill the row and sibling cards end up
+    // different heights.
+    <Reveal
+      step={revealStep}
+      className={cn("flex w-full", subgrid && "md:row-span-4 md:grid md:grid-rows-subgrid")}
+    >
       <Card
+        data-card
         className={cn(
-          "flex flex-col overflow-hidden",
+          "flex w-full flex-col overflow-hidden",
+          subgrid && "md:row-span-4 md:grid md:grid-rows-subgrid",
           // Hover: a hairline lift, nothing else. No scale, no shadow bloom —
           // a card the cursor merely passes over should not move.
           "transition-colors duration-150 ease-out hover:border-[var(--line-strong)]",
@@ -102,7 +118,7 @@ export function ChartFrame({
           {action ? <div className="shrink-0 pt-0.5">{action}</div> : null}
         </CardHeader>
 
-        {legend ? (
+        {legend || subgrid ? (
           <div
             className={cn(
               "flex px-5 pb-3",
@@ -113,11 +129,11 @@ export function ChartFrame({
           </div>
         ) : null}
 
-        <CardContent className={cn("flex-1", contentClassName)}>
+        <CardContent className={cn("flex flex-1 flex-col", contentClassName)}>
           {children}
         </CardContent>
 
-        {footer ? <CardFooter>{footer}</CardFooter> : null}
+        {footer || subgrid ? <CardFooter>{footer}</CardFooter> : null}
       </Card>
     </Reveal>
   );

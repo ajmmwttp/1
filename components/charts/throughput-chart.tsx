@@ -160,7 +160,7 @@ export function ThroughputChart() {
                 className={cn(
                   // 24px is a mouse-sized pill; a finger needs 40. Width is
                   // already ≥49px for every label, so only height moves.
-                  "relative h-6 rounded-[6px] px-2 text-[11px] font-medium pointer-coarse:h-10 hover:bg-transparent",
+                  "relative h-6 rounded-[6px] px-2 text-[12px] font-medium pointer-coarse:h-10 hover:bg-transparent",
                   selected
                     ? "text-[var(--ink)]"
                     : "text-[var(--ink-3)] hover:text-[var(--ink-2)]",
@@ -192,7 +192,7 @@ export function ThroughputChart() {
           the band between them was the emptiest part of the page. */}
       <div
         ref={plotRef}
-        className="h-[260px] w-full sm:h-[300px] md:h-[280px] xl:h-[340px]"
+        className="min-h-[260px] w-full flex-1 sm:min-h-[300px] md:min-h-[280px] xl:min-h-[340px]"
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
@@ -236,7 +236,7 @@ export function ThroughputChart() {
               tickMargin={10}
               minTickGap={4}
               interval={fittedInterval(data.length, plotWidth)}
-              tick={{ fill: "var(--axis)", fontSize: 11 }}
+              tick={{ fill: "var(--axis)", fontSize: 12 }}
             />
             <YAxis
               domain={Y_DOMAIN}
@@ -246,7 +246,7 @@ export function ThroughputChart() {
               tickLine={false}
               axisLine={false}
               tickMargin={6}
-              tick={{ fill: "var(--axis)", fontSize: 11 }}
+              tick={{ fill: "var(--axis)", fontSize: 12 }}
               tickFormatter={(value: number) => String(Math.round(value))}
             />
 
@@ -265,7 +265,7 @@ export function ThroughputChart() {
                   value: "記録なし",
                   position: narrowBand ? "insideTop" : "center",
                   fill: "var(--ink-4)",
-                  fontSize: 10.5,
+                  fontSize: 12,
                   dy: narrowBand ? 4 : 0,
                 }}
               />
@@ -279,7 +279,7 @@ export function ThroughputChart() {
                 value: "標準",
                 position: "insideTopRight",
                 fill: "var(--ink-3)",
-                fontSize: 10.5,
+                fontSize: 12,
                 dy: -4,
               }}
             />

@@ -117,7 +117,7 @@ export function Notifications() {
       <DropdownMenuContent align="end" className="w-[336px] p-0">
         <div className="flex items-center justify-between px-1 pt-1">
           <DropdownMenuLabel>通知</DropdownMenuLabel>
-          <span className="px-2 text-[10.5px] text-[var(--ink-4)]">
+          <span className="px-2 text-[12px] text-[var(--ink-4)]">
             <span className="tnum">{NOTES.length}</span>件未読
           </span>
         </div>
@@ -132,10 +132,10 @@ export function Notifications() {
               >
                 <Icon className={`mt-px ${TONE_TEXT[note.tone]}`} />
                 <span className="flex min-w-0 flex-col gap-1">
-                  <span className="text-[12.5px] leading-[1.45] text-[var(--ink-2)]">
+                  <span className="text-[12px] leading-[1.45] text-[var(--ink-2)]">
                     {note.title}
                   </span>
-                  <span className="flex items-center gap-1.5 text-[10.5px] text-[var(--ink-4)]">
+                  <span className="flex items-center gap-1.5 text-[12px] text-[var(--ink-4)]">
                     <span className={TONE_TEXT[note.tone]}>{note.status}</span>
                     <span aria-hidden>·</span>
                     {note.time}
@@ -147,7 +147,7 @@ export function Notifications() {
         </div>
         <DropdownMenuSeparator className="mx-0" />
         <div className="p-1">
-          <DropdownMenuItem className="justify-center text-[11.5px] text-[var(--ink-3)]">
+          <DropdownMenuItem className="justify-center text-[12px] text-[var(--ink-3)]">
             すべての通知を見る
           </DropdownMenuItem>
         </div>

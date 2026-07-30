@@ -88,7 +88,7 @@ export function ChartTooltip({
       )}
     >
       {title ? (
-        <div className="mb-1.5 text-[11px] leading-none text-[var(--ink-3)]">
+        <div className="mb-1.5 text-[12px] leading-none text-[var(--ink-3)]">
           {title}
         </div>
       ) : null}
@@ -101,12 +101,12 @@ export function ChartTooltip({
               className="size-2 shrink-0 rounded-[3px]"
               style={{ backgroundColor: row.color ?? "transparent" }}
             />
-            <span className="text-[11.5px] leading-none text-[var(--ink-2)]">
+            <span className="text-[12px] leading-none text-[var(--ink-2)]">
               {row.label}
             </span>
             <span
               className={cn(
-                "ml-auto pl-3 text-[11.5px] leading-none",
+                "ml-auto pl-3 text-[12px] leading-none",
                 row.muted
                   ? "text-[var(--ink-4)]"
                   : "tnum text-[var(--ink)]",

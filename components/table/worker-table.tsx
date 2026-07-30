@@ -45,7 +45,7 @@ const MAX_ITEMS_PER_COMPANY = Math.max(...ROWS.map((r) => r.pick.itemsPerCompany
 
 const CELL = "h-10 border-b border-[var(--line)] px-2 align-middle whitespace-nowrap";
 const HEAD =
-  "sticky top-0 z-10 h-[34px] pointer-coarse:h-11 whitespace-nowrap bg-[var(--card)] px-2 text-[11px] font-medium";
+  "sticky top-0 z-10 h-[34px] pointer-coarse:h-11 whitespace-nowrap bg-[var(--card)] px-2 text-[12px] font-medium";
 
 /* ── frozen identity column ───────────────────────────────────
    On a phone the table is 880px inside a ~356px window, so the reader is
@@ -192,7 +192,7 @@ function Cell({ row, column, stuck }: { row: PickRow; column: Column; stuck: boo
         <td className={cn(base, FROZEN, "left-[var(--frozen-x)]", stuck && FROZEN_EDGE)}>
           <span className="flex items-center gap-1.5">
             <span className="min-w-0 truncate text-[var(--ink)]">{row.name}</span>
-            <Badge tone="outline" className="shrink-0 px-1 py-[2px] text-[10px] text-[var(--ink-3)]">
+            <Badge tone="outline" className="shrink-0 px-1 py-[2px] text-[12px] text-[var(--ink-3)]">
               {roleLabel(row.role)}
             </Badge>
           </span>
@@ -255,10 +255,10 @@ function EmptyRow({ onClear }: { onClear: () => void }) {
             <SearchX className="size-4 text-[var(--ink-3)]" aria-hidden />
           </span>
           <span className="flex flex-col gap-1">
-            <span className="text-[12.5px] font-medium text-[var(--ink)]">
+            <span className="text-[12px] font-medium text-[var(--ink)]">
               該当する担当者がいません
             </span>
-            <span className="text-[11.5px] text-[var(--ink-3)]">
+            <span className="text-[12px] text-[var(--ink-3)]">
               検索語や絞り込みを変えてください。
             </span>
           </span>
@@ -348,7 +348,7 @@ export function WorkerTable() {
   return (
     <TooltipProvider delayDuration={120}>
       <Reveal step={REVEAL_STEPS.table}>
-        <Card>
+        <Card data-card>
           <CardHeader className="flex-col items-stretch gap-0">
             <div>
               <CardTitle>担当者ランキング（ピッキング）</CardTitle>
@@ -375,7 +375,7 @@ export function WorkerTable() {
               <table
                 ref={tableRef}
                 style={{ "--frozen-x": `${frozenX}px` } as React.CSSProperties}
-                className="w-full min-w-[880px] border-separate border-spacing-0 text-[12.5px]"
+                className="w-full min-w-[880px] border-separate border-spacing-0 text-[12px]"
               >
                 <caption className="sr-only">
                   ピッキング担当者26名の件数・企業数・件/社・素の秒/件・純速度・効率・判定。既定は効率の降順。

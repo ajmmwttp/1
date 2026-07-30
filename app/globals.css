@@ -19,10 +19,12 @@
   --elevated: #f4f4f5;
   --sunken: #f0f0ef;
 
+  /* Every step clears 4.5:1 on --card, --elevated and --page.
+     Measured, not chosen: ink-4 is the quietest grey that still passes. */
   --ink: #0b0b0d;
-  --ink-2: #52525b;
-  --ink-3: #8b8b93;
-  --ink-4: #b4b4bb;
+  --ink-2: #4a4a52;
+  --ink-3: #5c5c64;
+  --ink-4: #68686f;
 
   --line: rgb(9 9 11 / 0.09);
   --line-strong: rgb(9 9 11 / 0.16);
@@ -42,9 +44,13 @@
   --warning: #fab219;
   --serious: #ec835a;
   --critical: #d03b3b;
+  /* The status hues above are for MARKS. Text needs 4.5:1, which those
+     steps miss on at least one surface, so text uses these instead. */
+  --good-text: #0d7a0d;
+  --critical-text: #a32626;
 
   --grid: rgb(9 9 11 / 0.07);
-  --axis: #8b8b93;
+  --axis: #5c5c64;
 
   --shadow-flat: 0 1px 2px rgb(9 9 11 / 0.05);
   --shadow-lift: 0 1px 2px rgb(9 9 11 / 0.04), 0 12px 28px -18px rgb(9 9 11 / 0.28);
@@ -61,9 +67,9 @@
   --sunken: #0b0b0e;
 
   --ink: #fafafa;
-  --ink-2: #a1a1aa;
-  --ink-3: #71717a;
-  --ink-4: #52525b;
+  --ink-2: #b4b4bd;
+  --ink-3: #9a9aa4;
+  --ink-4: #8e8e99;
 
   --line: rgb(255 255 255 / 0.07);
   --line-strong: rgb(255 255 255 / 0.14);
@@ -79,8 +85,11 @@
   --series-3: #199e70;
   --series-other: #52525b;
 
+  --good-text: #4bbf4b;
+  --critical-text: #e46f6f;
+
   --grid: rgb(255 255 255 / 0.055);
-  --axis: #71717a;
+  --axis: #9a9aa4;
 
   --shadow-flat: 0 1px 2px rgb(0 0 0 / 0.5);
   --shadow-lift: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 28px -18px rgb(0 0 0 / 0.8);
@@ -116,6 +125,8 @@
   --color-series-other: var(--series-other);
 
   --color-good: var(--good);
+  --color-good-text: var(--good-text);
+  --color-critical-text: var(--critical-text);
   --color-warning: var(--warning);
   --color-serious: var(--serious);
   --color-critical: var(--critical);
@@ -148,6 +159,10 @@ html {
 body {
   background: var(--page);
   color: var(--ink);
+  /* Without this the browser default (16px) leaks in as an untrackable
+     extra step for every element that carries no size utility. */
+  font-size: 12px;
+  line-height: 16px;
   font-family:
     var(--font-geist-sans), var(--font-noto-jp), "Hiragino Kaku Gothic ProN",
     "Yu Gothic", ui-sans-serif, sans-serif;

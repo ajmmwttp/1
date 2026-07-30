@@ -140,7 +140,7 @@ export function TimeMixChart() {
             <span className="tnum text-[30px] leading-none text-[var(--ink)]">
               {pct(VALUE_ADDING_SHARE)}
             </span>
-            <span className="mt-2 text-[10.5px] uppercase tracking-[0.09em] text-[var(--ink-4)]">
+            <span className="mt-2 text-[12px] uppercase tracking-[0.09em] text-[var(--ink-4)]">
               付加価値作業
             </span>
           </div>
@@ -166,17 +166,17 @@ export function TimeMixChart() {
                   legend carries the values that discharge the low-contrast
                   relief rule, so it must stay fully readable. */}
               <span className="min-w-0 flex-1">
-                <span className="block text-[12.5px] leading-none text-[var(--ink-2)]">
+                <span className="block text-[12px] leading-none text-[var(--ink-2)]">
                   {slice.label}
                 </span>
-                <span className="mt-1 block text-[10.5px] leading-[1.4] text-[var(--ink-4)]">
+                <span className="mt-1 block text-[12px] leading-[1.4] text-[var(--ink-4)]">
                   {slice.detail}
                 </span>
               </span>
-              <span className="tnum shrink-0 pl-2 text-[12.5px] leading-none text-[var(--ink)]">
+              <span className="tnum shrink-0 pl-2 text-[12px] leading-none text-[var(--ink)]">
                 {hours(slice.hours)}
               </span>
-              <span className="tnum w-12 shrink-0 text-right text-[11px] leading-none text-[var(--ink-3)]">
+              <span className="tnum w-12 shrink-0 text-right text-[12px] leading-none text-[var(--ink-3)]">
                 {pct(slice.share)}
               </span>
             </li>

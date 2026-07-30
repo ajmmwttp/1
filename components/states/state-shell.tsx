@@ -57,7 +57,7 @@ export function StateShell({
         />
       </div>
 
-      <h2 className="mt-4 text-[13px] font-medium tracking-[-0.01em] text-[var(--ink)]">
+      <h2 className="mt-4 text-[12px] font-medium tracking-[-0.01em] text-[var(--ink)]">
         {title}
       </h2>
 

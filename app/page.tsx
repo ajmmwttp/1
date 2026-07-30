@@ -1,5 +1,9 @@
 import { CalendarRange, Download } from "lucide-react";
 import { KpiRow } from "@/components/kpi/kpi-row";
+import {
+  SetupScatterContaminated,
+  SetupScatterCorrected,
+} from "@/components/charts/setup-scatter";
 import { ThroughputChart } from "@/components/charts/throughput-chart";
 import { WorkerSpeedChart } from "@/components/charts/worker-speed-chart";
 import { TimeMixChart } from "@/components/charts/time-mix-chart";
@@ -13,13 +17,13 @@ export default function Page() {
     <>
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[10.5px] font-medium uppercase tracking-[0.09em] text-[var(--ink-4)]">
+          <p className="text-[12px] font-medium uppercase tracking-[0.09em] text-[var(--ink-4)]">
             オペレーション概要
           </p>
-          <h1 className="mt-1.5 text-[22px] font-medium tracking-[-0.02em] text-[var(--ink)]">
+          <h1 className="mt-1.5 text-[16px] font-medium tracking-[-0.02em] text-[var(--ink)]">
             2026年4月　庫内作業レビュー
           </h1>
-          <p className="mt-1.5 max-w-[62ch] text-[12.5px] leading-relaxed text-[var(--ink-3)]">
+          <p className="mt-1.5 max-w-[62ch] text-[12px] leading-relaxed text-[var(--ink-3)]">
             ピッキングと梱包を、段取り時間を切り分けて評価しています。件数だけで並べると、
             1社1個のリストを多く引いた人ほど不利に出ます。
           </p>
@@ -31,7 +35,7 @@ export default function Page() {
             <span className="tnum">
               {dataWindow.start.replaceAll("-", "/")} – {dataWindow.end.replaceAll("-", "/")}
             </span>
-            <span className="ml-1 rounded-[4px] bg-[var(--elevated)] px-1.5 py-0.5 text-[10.5px] text-[var(--ink-4)]">
+            <span className="ml-1 rounded-[4px] bg-[var(--elevated)] px-1.5 py-0.5 text-[12px] text-[var(--ink-4)]">
               <span className="tnum">{dataWindow.totalDays}</span> 日
             </span>
           </div>
@@ -42,31 +46,42 @@ export default function Page() {
         </div>
       </header>
 
-      <div className="space-y-4">
+      <div data-section className="space-y-4">
         <KpiRow />
 
+        {/* Position 2: this pair is the argument the whole console makes. */}
         <section
-          aria-label="推移と内訳"
-          className="grid grid-cols-1 gap-4 xl:grid-cols-12"
+          data-section
+          aria-label="段取りの混入と、その補正"
+          className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:grid-rows-[auto_auto_1fr_auto]"
         >
-          <div className="xl:col-span-8">
+          <SetupScatterContaminated />
+          <SetupScatterCorrected />
+        </section>
+
+        <section
+          data-section
+          aria-label="推移と内訳"
+          className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-12"
+        >
+          <div className="flex xl:col-span-8">
             <ThroughputChart />
           </div>
-          <div className="xl:col-span-4">
+          <div className="flex xl:col-span-4">
             <TimeMixChart />
           </div>
         </section>
 
-        <section aria-label="担当者別の速度">
+        <section data-section aria-label="担当者別の速度">
           <WorkerSpeedChart />
         </section>
 
-        <section aria-label="担当者ランキング">
+        <section data-section aria-label="担当者ランキング">
           <WorkerTable />
         </section>
       </div>
 
-      <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-4 text-[11px] text-[var(--ink-4)]">
+      <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-4 text-[12px] text-[var(--ink-4)]">
         <p>
           標準時間 ＝ a × 企業数 ＋ b × 件数　（ピッキング a=
           <span className="tnum">112.8</span> 秒/社・b=
