@@ -1,9 +1,13 @@
-"use client";
-
-import * as React from "react";
+import type { ReactNode } from "react";
 import { CalendarOff, Inbox, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StateShell } from "@/components/states/state-shell";
+
+/* No "use client" on purpose. lucide-react ships no client boundary, so a
+   LucideIcon prop cannot be serialised across a server→client edge. Left
+   universal, this renders on the server when a server page passes `icon`,
+   and compiles into the client bundle when a client parent passes
+   `onAction`. Both callers work; neither throws. */
 
 export interface EmptyStateProps {
   icon?: LucideIcon;
@@ -11,6 +15,8 @@ export interface EmptyStateProps {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** Extra actions — use this for links, which `onAction` cannot express. */
+  children?: ReactNode;
   className?: string;
 }
 
@@ -20,8 +26,11 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
+  children,
   className,
 }: EmptyStateProps) {
+  const hasActions = Boolean(actionLabel) || Boolean(children);
+
   return (
     <StateShell
       icon={icon}
@@ -29,10 +38,15 @@ export function EmptyState({
       description={description}
       className={className}
     >
-      {actionLabel ? (
-        <Button variant="outline" size="sm" onClick={onAction}>
-          {actionLabel}
-        </Button>
+      {hasActions ? (
+        <>
+          {actionLabel ? (
+            <Button variant="outline" size="sm" onClick={onAction}>
+              {actionLabel}
+            </Button>
+          ) : null}
+          {children}
+        </>
       ) : null}
     </StateShell>
   );

@@ -97,12 +97,8 @@ export function ChartTooltip({
           <div key={row.label} className="flex items-center gap-2">
             <span
               aria-hidden
-              className={cn("size-2 shrink-0 rounded-[3px]")}
-              style={
-                row.color
-                  ? { backgroundColor: row.color }
-                  : { backgroundColor: "transparent" }
-              }
+              className="size-2 shrink-0 rounded-[3px]"
+              style={{ backgroundColor: row.color ?? "transparent" }}
             />
             <span className="text-[11.5px] leading-none text-[var(--ink-2)]">
               {row.label}

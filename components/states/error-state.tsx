@@ -1,6 +1,3 @@
-"use client";
-
-import * as React from "react";
 import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StateShell } from "@/components/states/state-shell";

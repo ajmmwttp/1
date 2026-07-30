@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import type { Role, Verdict } from "@/lib/data/warehouse";
 import { Badge } from "@/components/ui/badge";
@@ -26,19 +27,27 @@ interface TableToolbarProps {
   onClear: () => void;
 }
 
-function FilterTrigger({ label, selected, total }: { label: string; selected: number; total: number }) {
-  return (
-    <Button variant="outline" size="sm" className="gap-1.5 font-normal">
+interface FilterTriggerProps extends React.ComponentPropsWithoutRef<typeof Button> {
+  label: string;
+  selected: number;
+  total: number;
+}
+
+/** Forwards ref + props so DropdownMenuTrigger asChild can drive it. */
+const FilterTrigger = React.forwardRef<HTMLButtonElement, FilterTriggerProps>(
+  ({ label, selected, total, ...props }, ref) => (
+    <Button ref={ref} variant="outline" size="sm" className="gap-1.5 font-normal" {...props}>
       {label}
       {selected < total && (
         <span className="tnum text-[11px] text-[var(--accent)]">
           {selected}/{total}
         </span>
       )}
-      <ChevronDown className="text-[var(--ink-4)]" />
+      <ChevronDown className="text-[var(--ink-4)]" aria-hidden />
     </Button>
-  );
-}
+  ),
+);
+FilterTrigger.displayName = "FilterTrigger";
 
 export function TableToolbar({
   query,
@@ -62,7 +71,7 @@ export function TableToolbar({
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="担当者を検索"
           aria-label="担当者を検索"
-          className="w-[196px] pl-7.5"
+          className="w-[196px] pl-[30px]"
         />
       </div>
 
