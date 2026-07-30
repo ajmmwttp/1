@@ -45,7 +45,25 @@ const MAX_ITEMS_PER_COMPANY = Math.max(...ROWS.map((r) => r.pick.itemsPerCompany
 
 const CELL = "h-10 border-b border-[var(--line)] px-2 align-middle whitespace-nowrap";
 const HEAD =
-  "sticky top-0 z-10 h-[34px] whitespace-nowrap bg-[var(--card)] px-2 text-[11px] font-medium";
+  "sticky top-0 z-10 h-[34px] pointer-coarse:h-11 whitespace-nowrap bg-[var(--card)] px-2 text-[11px] font-medium";
+
+/* ── frozen identity column ───────────────────────────────────
+   On a phone the table is 880px inside a ~356px window, so the reader is
+   always scrolling numbers past a name they can no longer see. # and 担当者
+   are pinned to the left edge instead: the identity stays put and only the
+   measures move. Both cells carry an opaque surface (otherwise the scrolled
+   columns show straight through) and repeat the row's hover / focus / selected
+   surface so a pinned row still reads as one row.
+
+   The name column's offset is the rank column's rendered width, which is NOT
+   its declared 32px: the table's auto layout stretches every declared width
+   proportionally to reach min-w-[880px]. Measuring it is the only way to make
+   the two cells tile exactly, so a ResizeObserver feeds --frozen-x below. */
+const FROZEN =
+  "sticky z-[1] bg-[var(--card)] group-hover:bg-[var(--elevated)] group-focus-visible:bg-[var(--elevated)] group-aria-selected:bg-[var(--elevated)]";
+/** Marks the seam while the numbers are scrolled under it. */
+const FROZEN_EDGE =
+  "border-r border-[var(--line)] shadow-[6px_0_10px_-8px_var(--line-strong)]";
 
 /* ── header ───────────────────────────────────────────────── */
 
@@ -68,14 +86,18 @@ function HeaderCell({
   column,
   sort,
   onToggle,
+  stuck,
 }: {
   column: Column;
   sort: SortState;
   onToggle: (id: SortableId) => void;
+  /** True while the reader has scrolled the measures under the frozen pair. */
+  stuck: boolean;
 }) {
   const sortId = column.sortId;
   const active = sortId !== undefined && sortId === sort.id;
   const right = column.align === "right";
+  const frozen = column.id === "rank" || column.id === "name";
 
   const label = sortId ? (
     <button
@@ -84,6 +106,10 @@ function HeaderCell({
       aria-label={`${column.label}で並べ替え`}
       className={cn(
         "inline-flex items-center gap-1 rounded-[4px] transition-colors",
+        // A 17px-tall text button is a mouse target. On touch it fills the
+        // taller header row and holds a 40px minimum on the short labels.
+        "pointer-coarse:h-10 pointer-coarse:min-w-10",
+        right && "pointer-coarse:justify-end",
         active ? "text-[var(--ink)]" : "text-[var(--ink-3)] hover:text-[var(--ink-2)]",
       )}
     >
@@ -105,6 +131,11 @@ function HeaderCell({
         column.width,
         right ? "text-right" : "text-left",
         "after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-[var(--line)] after:content-['']",
+        // z-20 so the frozen pair wins the corner against the rest of the
+        // header (z-10), which in turn wins against the frozen body cells.
+        frozen && "z-20",
+        frozen && (column.id === "rank" ? "left-0" : "left-[var(--frozen-x)]"),
+        frozen && stuck && column.id === "name" && FROZEN_EDGE,
       )}
     >
       <span className={cn("inline-flex items-center gap-1", right && "justify-end")}>
@@ -115,7 +146,7 @@ function HeaderCell({
               <button
                 type="button"
                 aria-label={`${column.label}とは`}
-                className="rounded-[4px] text-[var(--ink-4)] transition-colors hover:text-[var(--ink-2)]"
+                className="flex size-4 items-center justify-center rounded-[4px] text-[var(--ink-4)] transition-colors pointer-coarse:size-10 hover:text-[var(--ink-2)]"
               >
                 <Info className="size-3" aria-hidden />
               </button>
@@ -132,7 +163,7 @@ function HeaderCell({
 
 /* ── cells ────────────────────────────────────────────────── */
 
-function Cell({ row, column }: { row: PickRow; column: Column }) {
+function Cell({ row, column, stuck }: { row: PickRow; column: Column; stuck: boolean }) {
   const p = row.pick;
   const right = column.align === "right";
   const base = cn(CELL, right ? "text-right" : "text-left");
@@ -140,7 +171,9 @@ function Cell({ row, column }: { row: PickRow; column: Column }) {
   switch (column.id) {
     case "rank":
       return (
-        <td className={cn(base, "relative pr-1 pl-3")}>
+        // sticky is itself a positioned box, so the rail below still anchors
+        // to this cell — `relative` would only fight it for the position slot.
+        <td className={cn(base, FROZEN, "left-0 pr-1 pl-3")}>
           {/* Grows from the vertical centre rather than fading: a rail that
               fades reads as a highlight appearing, one that draws itself
               reads as the row being picked out. 180ms on the expo curve.
@@ -156,7 +189,7 @@ function Cell({ row, column }: { row: PickRow; column: Column }) {
 
     case "name":
       return (
-        <td className={base}>
+        <td className={cn(base, FROZEN, "left-[var(--frozen-x)]", stuck && FROZEN_EDGE)}>
           <span className="flex items-center gap-1.5">
             <span className="min-w-0 truncate text-[var(--ink)]">{row.name}</span>
             <Badge tone="outline" className="shrink-0 px-1 py-[2px] text-[10px] text-[var(--ink-3)]">
@@ -229,7 +262,12 @@ function EmptyRow({ onClear }: { onClear: () => void }) {
               検索語や絞り込みを変えてください。
             </span>
           </span>
-          <Button variant="outline" size="sm" onClick={onClear}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClear}
+            className="pointer-coarse:h-10 pointer-coarse:px-4"
+          >
             クリア
           </Button>
         </div>
@@ -283,6 +321,30 @@ export function WorkerTable() {
     );
   }, []);
 
+  /* Frozen-column plumbing. `frozenX` is the rank column's rendered width, so
+     the 担当者 cells butt up against it with no seam and no overlap at any
+     table width; 32 is the declared width, which is right until the auto
+     layout stretches the table to its 880px minimum. `stuck` only turns the
+     seam on once there is something scrolled beneath it. */
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const tableRef = React.useRef<HTMLTableElement>(null);
+  const [frozenX, setFrozenX] = React.useState(32);
+  const [stuck, setStuck] = React.useState(false);
+
+  React.useEffect(() => {
+    const head = tableRef.current?.querySelector("thead th");
+    if (!head) return;
+    const measure = () => setFrozenX(head.getBoundingClientRect().width);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(head);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    setStuck(event.currentTarget.scrollLeft > 0);
+  }, []);
+
   return (
     <TooltipProvider delayDuration={120}>
       <Reveal step={REVEAL_STEPS.table}>
@@ -309,15 +371,19 @@ export function WorkerTable() {
           </CardHeader>
 
           <CardContent className="px-0 pb-0">
-            <div className="max-h-[560px] overflow-auto">
-              <table className="w-full min-w-[880px] border-separate border-spacing-0 text-[12.5px]">
+            <div ref={scrollRef} onScroll={handleScroll} className="max-h-[560px] overflow-auto">
+              <table
+                ref={tableRef}
+                style={{ "--frozen-x": `${frozenX}px` } as React.CSSProperties}
+                className="w-full min-w-[880px] border-separate border-spacing-0 text-[12.5px]"
+              >
                 <caption className="sr-only">
                   ピッキング担当者26名の件数・企業数・件/社・素の秒/件・純速度・効率・判定。既定は効率の降順。
                 </caption>
                 <thead>
                   <tr>
                     {COLUMNS.map((c) => (
-                      <HeaderCell key={c.id} column={c} sort={sort} onToggle={toggle} />
+                      <HeaderCell key={c.id} column={c} sort={sort} onToggle={toggle} stuck={stuck} />
                     ))}
                   </tr>
                 </thead>
@@ -345,7 +411,7 @@ export function WorkerTable() {
                       className="group cursor-default transition-colors duration-150 hover:bg-[var(--elevated)] focus-visible:bg-[var(--elevated)] aria-selected:bg-[var(--elevated)]"
                     >
                       {COLUMNS.map((c) => (
-                        <Cell key={c.id} row={row} column={c} />
+                        <Cell key={c.id} row={row} column={c} stuck={stuck} />
                       ))}
                     </tr>
                   ))}

@@ -33,7 +33,7 @@ const pickEffSeries = days
 
 export function KpiRow() {
   return (
-    <section aria-label="主要指標">
+    <section aria-label="主要指標" data-probe={JSON.stringify(REVEAL_STEPS)}>
       {/* Entrance ladder: the lede shares the first tile's beat, then one
           40ms step per tile. Delays are hard-coded here because page.tsx is
           a server component and cannot orchestrate. */}

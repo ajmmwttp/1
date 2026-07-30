@@ -102,6 +102,8 @@ function NavRow({
       }}
       className={cn(
         "relative flex h-8 items-center gap-2.5 overflow-hidden rounded-[8px] px-2.5 text-[12.5px] transition-colors duration-150 ease-[cubic-bezier(.16,1,.3,1)]",
+        // The drawer is a touch surface by definition; 32px rows are not.
+        "pointer-coarse:h-10",
         collapsed && "justify-center",
         active
           ? "bg-[var(--elevated)] font-medium text-[var(--ink)]"

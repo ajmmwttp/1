@@ -39,7 +39,8 @@ export function UserMenu({ variant = "full", className }: UserMenuProps) {
             "hover:bg-[var(--elevated)] data-[state=open]:bg-[var(--elevated)]",
             isFull
               ? "w-full gap-2 overflow-hidden p-1.5 text-left"
-              : "justify-center p-1",
+              // The avatar variant sits at 36px, just under the touch floor.
+              : "justify-center p-1 pointer-coarse:size-10 pointer-coarse:p-1.5",
             className,
           )}
         >

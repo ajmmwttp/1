@@ -60,7 +60,16 @@ for (const { w, h, coarse } of WIDTHS) {
 
   const res = await page.goto(BASE, { waitUntil: "load", timeout: 60000 });
   if (!res || !res.ok()) failures.push(`${w}px HTTP ${res?.status()}`);
-  // Framer Motion entrances + Recharts ResponsiveContainer measurement.
+  // Recharts draws its axes only after ResponsiveContainer has measured, and
+  // the reveal ladder staggers the cards in — wait for the last axis, then let
+  // the entrance settle before taking any geometry.
+  await page
+    .waitForFunction(
+      () => document.querySelectorAll(".recharts-cartesian-axis-tick-value").length > 20,
+      null,
+      { timeout: 60000 },
+    )
+    .catch(() => failures.push(`${w}px: charts never finished drawing`));
   await page.waitForTimeout(2000);
 
   const report = await page.evaluate(

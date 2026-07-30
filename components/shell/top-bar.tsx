@@ -38,7 +38,9 @@ export function TopBar({
         size="icon-sm"
         onClick={onOpenMobileNav}
         aria-label="メニューを開く"
-        className="lg:hidden"
+        // 28px is a cursor target; every icon button in the bar grows to 40
+        // on a coarse pointer. The 56px bar already has the room.
+        className="lg:hidden pointer-coarse:size-10"
       >
         <Menu />
       </Button>
@@ -75,6 +77,7 @@ export function TopBar({
           onClick={onOpenPalette}
           className={cn(
             "hidden h-8 w-[240px] items-center gap-2 rounded-[8px] border border-[var(--line)] bg-[var(--elevated)] px-2.5",
+            "pointer-coarse:h-10",
             "text-[12.5px] text-[var(--ink-4)] transition-colors duration-150 md:flex",
             "hover:border-[var(--line-strong)] hover:text-[var(--ink-3)]",
           )}
@@ -93,7 +96,7 @@ export function TopBar({
               size="icon-sm"
               onClick={onOpenPalette}
               aria-label="担当者・工程を検索"
-              className="md:hidden"
+              className="md:hidden pointer-coarse:size-10"
             >
               <Search />
             </Button>

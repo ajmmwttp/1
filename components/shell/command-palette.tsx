@@ -205,6 +205,7 @@ export function CommandPalette({
                     onClick={() => select(row)}
                     className={cn(
                       "relative flex h-9 w-full items-center gap-2.5 rounded-[8px] px-2.5 text-left text-[12.5px] outline-none transition-colors duration-100",
+                      "pointer-coarse:h-11",
                       activeRow
                         ? "bg-[var(--elevated)] text-[var(--ink)]"
                         : "text-[var(--ink-2)]",

@@ -116,6 +116,9 @@ export function Sidebar({
             aria-expanded={!collapsed}
             className={cn(
               "absolute -right-3 top-[43px] z-10 flex size-6 items-center justify-center rounded-full",
+              // Grows to 40 on touch, re-centred on the rail edge and on the
+              // same optical line as the 24px handle it replaces.
+              "pointer-coarse:-right-5 pointer-coarse:top-[35px] pointer-coarse:size-10",
               "border border-[var(--line)] bg-[var(--card)] text-[var(--ink-3)] shadow-[var(--shadow-flat)]",
               "transition-colors duration-150 hover:border-[var(--line-strong)] hover:text-[var(--ink)]",
             )}

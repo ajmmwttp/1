@@ -99,12 +99,14 @@ export function Notifications() {
               variant="ghost"
               size="icon-sm"
               aria-label={`通知 ${NOTES.length}件`}
-              className="relative"
+              className="relative pointer-coarse:size-10"
             >
               <Bell />
               <span
                 aria-hidden
-                className="absolute right-1 top-1 size-1.5 rounded-full bg-[var(--accent)] ring-2 ring-[var(--page)]"
+                // Follows the glyph, not the box: the button grows to 40 on
+                // touch but the bell stays 14px, so the dot re-centres on it.
+                className="absolute right-1 top-1 size-1.5 rounded-full bg-[var(--accent)] ring-2 ring-[var(--page)] pointer-coarse:top-2.5 pointer-coarse:right-2.5"
               />
             </Button>
           </DropdownMenuTrigger>

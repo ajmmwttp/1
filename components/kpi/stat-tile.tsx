@@ -151,7 +151,9 @@ export function StatTile({
         className="pointer-events-none absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-[var(--accent)] transition-transform duration-[260ms] ease-[var(--ease-out-expo)] group-hover:scale-x-100"
       />
 
-      <div className="flex items-start justify-between gap-2">
+      {/* min-h holds the row at its mouse height once the hint button leaves
+          the flow on coarse pointers, so the figure below never shifts. */}
+      <div className="flex min-h-5 items-start justify-between gap-2">
         <span className="text-[10.5px] leading-none font-medium tracking-[0.09em] text-[var(--ink-4)] uppercase">
           {label}
         </span>
@@ -163,7 +165,15 @@ export function StatTile({
                 <button
                   type="button"
                   aria-label={`${label}の補足`}
-                  className="-mt-1 -mr-1 rounded-[4px] p-1 text-[var(--ink-4)] transition-colors duration-150 hover:text-[var(--ink-2)]"
+                  className={cn(
+                    "-mt-1 -mr-1 flex size-5 items-center justify-center rounded-[4px]",
+                    "text-[var(--ink-4)] transition-colors duration-150 hover:text-[var(--ink-2)]",
+                    /* A 20px hit box is fine for a cursor and useless for a
+                       thumb. On touch it becomes a 40px square pinned to the
+                       tile corner — same glyph, same optical position, out of
+                       the flow so nothing below it moves. */
+                    "pointer-coarse:absolute pointer-coarse:top-0.5 pointer-coarse:right-0.5 pointer-coarse:m-0 pointer-coarse:size-10",
+                  )}
                 >
                   <Info size={12} strokeWidth={2} aria-hidden />
                 </button>
