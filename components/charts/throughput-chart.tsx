@@ -198,7 +198,9 @@ export function ThroughputChart() {
             />
             <YAxis
               domain={Y_DOMAIN}
-              width={34}
+              // 3 digits at 11px need 40px; at 34 the top tick rendered "26"
+              // instead of "126" — silently clipped, not wrapped.
+              width={40}
               tickLine={false}
               axisLine={false}
               tickMargin={6}

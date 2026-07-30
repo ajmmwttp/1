@@ -140,22 +140,27 @@ export function TimeMixChart() {
             onMouseEnter={() => setActiveIndex(index)}
             onMouseLeave={() => setActiveIndex(null)}
             className={cn(
-              "flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 transition-colors duration-150",
+              "flex items-start gap-2.5 rounded-[6px] px-2 py-1.5 transition-colors duration-150",
               activeIndex === index ? "bg-[var(--elevated)]" : "bg-transparent",
             )}
           >
             <span
               aria-hidden
-              className="size-2 shrink-0 rounded-[3px]"
+              className="mt-1 size-2 shrink-0 rounded-[3px]"
               style={{ backgroundColor: slice.color }}
             />
-            <span className="shrink-0 text-[12.5px] leading-none text-[var(--ink-2)]">
-              {slice.label}
+            {/* Label and detail stack so the detail is never clipped — this
+                legend carries the values that discharge the low-contrast
+                relief rule, so it must stay fully readable. */}
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12.5px] leading-none text-[var(--ink-2)]">
+                {slice.label}
+              </span>
+              <span className="mt-1 block text-[10.5px] leading-[1.4] text-[var(--ink-4)]">
+                {slice.detail}
+              </span>
             </span>
-            <span className="truncate text-[10.5px] leading-none text-[var(--ink-4)]">
-              {slice.detail}
-            </span>
-            <span className="tnum ml-auto shrink-0 pl-2 text-[12.5px] leading-none text-[var(--ink)]">
+            <span className="tnum shrink-0 pl-2 text-[12.5px] leading-none text-[var(--ink)]">
               {hours(slice.hours)}
             </span>
             <span className="tnum w-12 shrink-0 text-right text-[11px] leading-none text-[var(--ink-3)]">
