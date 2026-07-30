@@ -32,6 +32,7 @@ const probe = () => {
     kpiAboveFold: null,
     tickCounts: [],
     svgZeroSize: [],
+    inkCollisions: [],
     hiddenByOpacity: [],
   };
 
@@ -84,6 +85,41 @@ const probe = () => {
   for (const svg of document.querySelectorAll(".recharts-surface")) {
     const r = svg.getBoundingClientRect();
     if (r.width < 40 || r.height < 40) out.svgZeroSize.push(`${Math.round(r.width)}x${Math.round(r.height)}`);
+  }
+
+  // ── 1c-2. SVG ink collisions: does a plotted curve run through a
+  //          chart label? A bounding-box test is not enough — sample the
+  //          path itself and test containment in the label's box.
+  for (const w of document.querySelectorAll(".recharts-wrapper")) {
+    const labels = Array.from(w.querySelectorAll("text")).filter((t) => {
+      const s = (t.textContent || "").trim();
+      return s === "記録なし" || s === "標準";
+    });
+    if (!labels.length) continue;
+    const curves = Array.from(w.querySelectorAll("path.recharts-curve"));
+    for (const label of labels) {
+      const lb = label.getBoundingClientRect();
+      let hits = 0;
+      for (const path of curves) {
+        let len = 0;
+        try {
+          len = path.getTotalLength();
+        } catch {
+          continue;
+        }
+        if (!len) continue;
+        for (let i = 0; i <= 400; i++) {
+          const pt = path.getPointAtLength((len * i) / 400);
+          const sc = path.ownerSVGElement.getScreenCTM();
+          if (!sc) break;
+          const x = sc.a * pt.x + sc.c * pt.y + sc.e;
+          const y = sc.b * pt.x + sc.d * pt.y + sc.f;
+          if (x >= lb.left && x <= lb.right && y >= lb.top && y <= lb.bottom) hits++;
+        }
+      }
+      if (hits > 0)
+        out.inkCollisions.push(`"${(label.textContent || "").trim()}" x${hits}`);
+    }
   }
 
   // ── 1d. anything still invisible after hydration ────────────────
@@ -140,7 +176,10 @@ const probe = () => {
   };
   const parse = (s) => (s.match(/[\d.]+/g) || []).map(Number);
   const bgOf = (el) => {
-    let p = el;
+    // SVG nodes have no painted background of their own — walk out to the
+    // HTML ancestor that actually fills, otherwise every tick scores against
+    // transparent and passes by accident.
+    let p = el.ownerSVGElement ? el.ownerSVGElement.parentElement : el;
     while (p && p !== document.documentElement) {
       const c = parse(getComputedStyle(p).backgroundColor);
       if (c.length >= 3 && (c[3] === undefined || c[3] > 0.9)) return c;
@@ -156,7 +195,10 @@ const probe = () => {
     if (parseFloat(s.opacity) < 0.5) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
-    const fg = parse(s.color),
+    // SVG text paints with `fill`, not `color`. Reading only `color` scored
+    // every chart label as passing against an inherited value it never uses.
+    const isSvgText = el.ownerSVGElement != null;
+    const fg = parse(isSvgText ? s.fill || s.color : s.color),
       bg = bgOf(el);
     if (fg.length < 3) continue;
     const a = fg[3] === undefined ? 1 : fg[3];
@@ -260,6 +302,7 @@ const c1 = allW.every(
     report[w].offenders.length === 0 &&
     report[w].clipped.length === 0 &&
     report[w].svgZeroSize.length === 0 &&
+    report[w].inkCollisions.length === 0 &&
     report[w].hiddenByOpacity.length === 0,
 );
 const c2 = allW.every((w) => {
@@ -296,7 +339,8 @@ for (const w of allW) {
   const r = report[w];
   lines.push(`── ${w}px ──`);
   lines.push(`  overflow=${r.overflowPx}px  offenders=${r.offenders.length}  clipped=${r.clipped.length}`);
-  lines.push(`  svgZero=${r.svgZeroSize.length}  invisible=${r.hiddenByOpacity.length}  consoleErrors=${r.consoleErrors.length}`);
+  lines.push(`  svgZero=${r.svgZeroSize.length}  inkCollision=${r.inkCollisions.length}  invisible=${r.hiddenByOpacity.length}  consoleErrors=${r.consoleErrors.length}`);
+  if (r.inkCollisions.length) lines.push(`   ! ink: ${r.inkCollisions.join(" | ")}`);
   lines.push(`  gutters=[${[...new Set(r.gutters)].join(",")}]  rowHeightDelta=[${r.rowHeightDelta.join(",")}]  offGrid=${r.offGrid.length}`);
   lines.push(`  ticks=${JSON.stringify(r.tickCounts)}`);
   lines.push(`  lowContrast=${r.lowContrast.length}  kpiBottom=${r.kpiAboveFold}`);

@@ -137,7 +137,6 @@ export function ThroughputChart() {
 
   /* Below this the band is too slim to hold a centred caption clear of the
      梱包 line, which keeps plotting straight through the gap. */
-  const narrowBand = plotWidth > 0 && plotWidth < 460;
 
   return (
     <ChartFrame
@@ -197,7 +196,7 @@ export function ThroughputChart() {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
-            margin={{ top: 10, right: 14, bottom: 0, left: -8 }}
+            margin={{ top: 10, right: 38, bottom: 0, left: -8 }}
           >
             <defs>
               <linearGradient id={PICK_FILL} x1="0" y1="0" x2="0" y2="1">
@@ -263,10 +262,10 @@ export function ThroughputChart() {
                    nothing is plotted. */
                 label={{
                   value: "記録なし",
-                  position: narrowBand ? "insideTop" : "center",
+                  position: "insideTop",
                   fill: "var(--ink-4)",
                   fontSize: 12,
-                  dy: narrowBand ? 4 : 0,
+                  dy: 4,
                 }}
               />
             ) : null}
@@ -277,7 +276,7 @@ export function ThroughputChart() {
               strokeDasharray="3 3"
               label={{
                 value: "標準",
-                position: "insideTopRight",
+                position: "right",
                 fill: "var(--ink-3)",
                 fontSize: 12,
                 dy: -4,
