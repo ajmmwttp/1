@@ -26,7 +26,7 @@ import { ChartTooltip, type ChartTooltipRow } from "./chart-tooltip";
    SetupScatter — the pair that carries the whole argument.
 
    ① y = 素の秒/件   tilts with x   (r=+0.490, p=0.011)
-   ② y = 純速度      does not       (r=+0.061, p=0.768)
+   ② y = 純速度      does not       (r=+0.061, p=0.77)
 
    Same x, same domains, same box. The two panels are only comparable
    because NOTHING varies between them except the y measure, so the
@@ -42,6 +42,14 @@ import { ChartTooltip, type ChartTooltipRow } from "./chart-tooltip";
    · y = 秒/件 is a duration per item, a ratio quantity. The vertical
      gap between the two clouds IS the setup time, and that reading is
      only quantitative against a common zero. Zero origin.
+
+   ②'s p is printed to two places on purpose. Its third decimal moves
+   between 0.767 and 0.769 depending on which defensible rounding of the
+   source you compute from (fractional company counts, the integer counts
+   an operator actually types, or these already-rounded fixtures), so
+   printing it would claim precision the data does not carry. ①'s 0.011
+   is stable across all three and sits near the threshold, so it keeps
+   three places.
 
    OUTLIERS cannot stretch the scale because the domains are round
    constants, not dataMax-derived. Dot area encodes 件数, so the two
@@ -227,7 +235,7 @@ export function SetupScatterCorrected() {
       yKey="pure"
       title="② 段取りを除くと、その傾きが消える"
       description="横軸は①と全く同じ。縦軸だけ純速度に替えたもの。傾きが消えれば、担当リストの偏りを取り除けたことになる。"
-      stat="r = +0.061 ・ p = 0.768 ・ n = 26　傾きは無いと言ってよい"
+      stat="r = +0.061 ・ p = 0.77 ・ n = 26　傾きは無いと言ってよい"
       color={series[1]}
       yLabel="純速度"
     />
