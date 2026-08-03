@@ -9,8 +9,8 @@ import { WorkerSpeedChart } from "@/components/charts/worker-speed-chart";
 import { TimeMixChart } from "@/components/charts/time-mix-chart";
 import { WorkerTable } from "@/components/table/worker-table";
 import { Button } from "@/components/ui/button";
-import { dataWindow, totals } from "@/lib/data/warehouse";
-import { int } from "@/lib/format";
+import { dataWindow, model, totals } from "@/lib/data/warehouse";
+import { dec, int } from "@/lib/format";
 
 export default function Page() {
   return (
@@ -84,10 +84,10 @@ export default function Page() {
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-4 text-[12px] text-[var(--ink-4)]">
         <p>
           標準時間 ＝ a × 企業数 ＋ b × 件数　（ピッキング a=
-          <span className="tnum">112.8</span> 秒/社・b=
-          <span className="tnum">65.7</span> 秒/件／梱包 a=
-          <span className="tnum">50.0</span> 秒/社・b=
-          <span className="tnum">81.8</span> 秒/件）
+          <span className="tnum">{dec(model.pick.a, 1)}</span> 秒/社・b=
+          <span className="tnum">{dec(model.pick.b, 1)}</span> 秒/件／梱包 a=
+          <span className="tnum">{dec(model.pack.a, 1)}</span> 秒/社・b=
+          <span className="tnum">{dec(model.pack.b, 1)}</span> 秒/件）
         </p>
         <p>
           対象 <span className="tnum">{totals.headcount}</span> 名・

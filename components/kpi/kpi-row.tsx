@@ -1,5 +1,5 @@
 import { dec, int } from "@/lib/format";
-import { days, deltas, timeMix, totals } from "@/lib/data/warehouse";
+import { dataWindow, days, deltas, timeMix, totals } from "@/lib/data/warehouse";
 import { REVEAL_STEPS } from "@/components/motion/ladder";
 import { Reveal } from "@/components/motion/reveal";
 import { StatTile } from "./stat-tile";
@@ -64,7 +64,7 @@ export function KpiRow() {
             spark={days.map((d) => d.totalItems)}
             tone="down"
             judged={false}
-            hint="ピッキング 15,942件 ＋ 梱包 24,449件"
+            hint={`ピッキング ${int(totals.pickItems)}件 ＋ 梱包 ${int(totals.packItems)}件`}
             countTo={totals.totalItems}
             countDecimals={0}
             countDelay={0}
@@ -82,7 +82,7 @@ export function KpiRow() {
             spark={pickEffSeries}
             tone="down"
             hint="標準時間 ÷ 実測時間。100 が標準どおり"
-            footnote="ピッキング 99.8 ／ 梱包 100.0"
+            footnote={`ピッキング ${dec(totals.pickEff, 1)} ／ 梱包 ${dec(totals.packEff, 1)}`}
             countTo={totals.avgEff}
             countDelay={40}
             className="h-full"
@@ -118,7 +118,7 @@ export function KpiRow() {
             tone="down"
             judged={false}
             hint="ピッキング＋梱包の実働合計"
-            footnote="26名 ／ 17日分の完全記録"
+            footnote={`${totals.headcount}名 ／ ${dataWindow.completeDays}日分の完全記録`}
             countTo={totals.totalHours}
             countDelay={120}
             className="h-full"

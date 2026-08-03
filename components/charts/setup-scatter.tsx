@@ -16,7 +16,7 @@ import {
 // references rather than values.
 import { REVEAL_STEPS } from "@/components/motion/ladder";
 import { series } from "@/lib/chart-theme";
-import { workers } from "@/lib/data/warehouse";
+import { scatterStats, workers } from "@/lib/data/warehouse";
 import { dec, int } from "@/lib/format";
 
 import { ChartFrame } from "./chart-frame";
@@ -214,6 +214,16 @@ function Panel({ yKey, title, description, stat, color, yLabel, revealStep }: Pa
   );
 }
 
+/**
+ * 見出しに出す相関の1行。r・p・n はデータ層（warehouse.ts）が持つ値をそのまま出す。
+ * p は 0.05 付近の桁が意味を持つので3桁、それ以外は2桁で足りる。
+ */
+function statLine({ r, p, n }: { r: number; p: number; n: number }) {
+  const rs = `${r >= 0 ? "+" : "−"}${dec(Math.abs(r), 3)}`;
+  const ps = p < 0.1 ? dec(p, 3) : dec(p, 2);
+  return `r = ${rs} ・ p = ${ps} ・ n = ${n}`;
+}
+
 export function SetupScatterContaminated() {
   return (
     <Panel
@@ -221,7 +231,7 @@ export function SetupScatterContaminated() {
       yKey="raw"
       title="① 素の秒/件 は、リストの構成で決まってしまう"
       description="右にいる人ほど「1社1個」のリストを多く引いた人。右上がりなら、速さではなく担当したリストの中身が数字を決めている。"
-      stat="r = +0.490 ・ p = 0.011 ・ n = 26　右上がりは偶然では説明できない"
+      stat={`${statLine(scatterStats.raw)}　右上がりは偶然では説明できない`}
       color={series[2]}
       yLabel="素の秒/件"
     />
@@ -235,7 +245,7 @@ export function SetupScatterCorrected() {
       yKey="pure"
       title="② 段取りを除くと、その傾きが消える"
       description="横軸は①と全く同じ。縦軸だけ純速度に替えたもの。傾きが消えれば、担当リストの偏りを取り除けたことになる。"
-      stat="r = +0.061 ・ p = 0.77 ・ n = 26　傾きは無いと言ってよい"
+      stat={`${statLine(scatterStats.pure)}　傾きは無いと言ってよい`}
       color={series[1]}
       yLabel="純速度"
     />
