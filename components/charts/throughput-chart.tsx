@@ -128,9 +128,11 @@ export function ThroughputChart() {
   /* The hatch has to snap to categories that actually exist in the
      current window, otherwise Recharts drops the band silently. */
   const gap = React.useMemo(() => {
-    const inGap = data.filter(
-      (d) => d.date >= recordGap.start && d.date <= recordGap.end,
-    );
+    // 欠落が無い月は recordGap が null。その場合は帯そのものを描かない。
+    // ローカルに束ねてから使う（クロージャ内では絞り込みが効かないため）。
+    const g = recordGap;
+    if (!g) return null;
+    const inGap = data.filter((d) => d.date >= g.start && d.date <= g.end);
     if (inGap.length < 2) return null;
     return { x1: inGap[0].date, x2: inGap[inGap.length - 1].date };
   }, [data]);

@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { dataWindow, recordGap } from "@/lib/data/warehouse";
+import { shortDate } from "@/lib/format";
 import {
   Bell,
   CalendarCheck,
@@ -47,10 +49,14 @@ const NOTES: Note[] = [
     icon: TriangleAlert,
     tone: "warning",
     status: "要確認",
-    title: (
+    title: recordGap ? (
       <>
-        <span className="tnum">4/24</span>
+        <span className="tnum">{shortDate(recordGap.start)}</span>
         以降のPK実働時間が未記録です
+      </>
+    ) : (
+      <>
+        PK実働時間は<span className="tnum">{dataWindow.totalDays}</span>日ぶん全て記録されています
       </>
     ),
     time: (
