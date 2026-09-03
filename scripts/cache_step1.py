@@ -82,11 +82,13 @@ def main():
     print('合計 %d セル' % total)
 
     # 再発防止: 開くたびに全再計算させる
-    assert 'fullCalcOnLoad' not in wbx, 'すでに fullCalcOnLoad がある'
     m = re.search(r'<calcPr([^>]*)/>', wbx)
     assert m, 'calcPr がない'
-    parts['xl/workbook.xml'] = (wbx[:m.end()-2] + ' fullCalcOnLoad="1"/>' + wbx[m.end():]).encode('utf-8')
-    print('workbook.xml: fullCalcOnLoad="1" を設定')
+    if 'fullCalcOnLoad' in m.group(1):
+        print('workbook.xml: fullCalcOnLoad は設定済み')
+    else:
+        parts['xl/workbook.xml'] = (wbx[:m.end()-2] + ' fullCalcOnLoad="1"/>' + wbx[m.end():]).encode('utf-8')
+        print('workbook.xml: fullCalcOnLoad="1" を設定')
 
     zout = zipfile.ZipFile(DST, 'w', zipfile.ZIP_DEFLATED)
     for nm in order:
