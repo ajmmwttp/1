@@ -136,7 +136,7 @@ if __name__ == "__main__":
     figs = {"C_band": plan_c(df, x, s, turns),
             "D_background": plan_d(df, x, s, turns),
             "E_ribbon": plan_e(df, x, s, turns)}
-    with PdfPages(OUT / "TurnLine_samples_CDE.pdf") as pdf:
+    with PdfPages(OUT / "TurnLine_samples_CDE.pdf", metadata={"CreationDate": None}) as pdf:
         for name, fig in figs.items():
             fig.savefig(OUT / f"TurnLine_plan{name}.png")
             pdf.savefig(fig)
