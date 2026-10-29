@@ -128,41 +128,49 @@ def price_tag(ax, last):
                 bbox=dict(boxstyle="square,pad=0.2", fc=UP_C, ec="none"))
 
 
-def setup_price_axes(ax, df, ylim, months=True):
+def setup_price_axes(ax, df, ylim, months=True, label="TQQQ・日足（合成データ）"):
     style_axes(ax, df, months)
     ax.set_ylim(*ylim)
     ax.set_autoscale_on(False)
-    ax.text(0.01, 0.985, "TQQQ・日足（合成データ）", transform=ax.transAxes, fontsize=8.5,
-            color="#666", va="top")
+    ax.text(0.01, 0.985, label, transform=ax.transAxes, fontsize=8.5, color="#666", va="top")
     price_tag(ax, df.c.iloc[-1])
 
 
-def draw_candles(ax, df, x):
+def draw_candles(ax, df, x, min_body=0.12):
     up = df.c >= df.o
     for m, col in ((up, UP_C), (~up, DN_C)):
         ax.vlines(x[m], df.l[m], df.h[m], color=col, lw=0.8, zorder=3)
-        ax.bar(x[m], (df.c - df.o)[m].abs().clip(lower=0.12), bottom=np.minimum(df.o, df.c)[m],
+        ax.bar(x[m], (df.c - df.o)[m].abs().clip(lower=min_body), bottom=np.minimum(df.o, df.c)[m],
                width=0.62, color=col, zorder=4)
 
 
-def draw_turn_labels(ax, df, x, turns, extra=None):
+def draw_turn_labels(ax, df, x, turns, extra=None, gap=0.8, texts=("▼天井確定", "▲底確定")):
+    """turns の各バーに札を付ける。gap は高値/安値から札までの距離（価格単位）"""
     extra = np.zeros(len(x)) if extra is None else extra
     for i, k in turns:
         if k == "H":
-            y, txt, fc, va, dy = df.h.iloc[i] + extra[i], "▼天井確定", RED_D, "bottom", 0.8
+            y, txt, fc, va, dy = df.h.iloc[i] + extra[i], texts[0], RED_D, "bottom", gap
         else:
-            y, txt, fc, va, dy = df.l.iloc[i] - extra[i], "▲底確定", GRN_D, "top", -0.8
+            y, txt, fc, va, dy = df.l.iloc[i] - extra[i], texts[1], GRN_D, "top", -gap
         ax.text(x[i], y + dy, txt, ha="center", va=va, fontsize=8.5, color="white", zorder=8,
                 bbox=dict(boxstyle="round,pad=0.25", fc=fc, ec="none"))
 
 
-def footer(fig, y=0.012):
-    fig.text(0.04, y, "※ 合成データ。接近度は転換点から逆算した理想形（見た目確認用）で、的中率は未検証",
-             fontsize=7.5, color="#888")
+NOTE_SYNTH = "※ 合成データ。接近度は転換点から逆算した理想形（見た目確認用）で、的中率は未検証"
 
 
-def make_two_pane(d, title, sub, height_ratios=(5, 3.2), figsize=(7.2, 9.6)):
-    """上: ローソク足（描画済み） / 下: 別ウィンドウ（空。月ラベルのみ）を返す"""
+def footer(fig, y=0.012, text=NOTE_SYNTH):
+    fig.text(0.04, y, text, fontsize=7.5, color="#888")
+
+
+def make_two_pane(d, title, sub, height_ratios=(5, 3.2), figsize=(7.2, 9.6), price_ylim=(52, 90),
+                  label="TQQQ・日足（合成データ）", note=NOTE_SYNTH):
+    """上: ローソク足（描画済み） / 下: 別ウィンドウ（空。月ラベルのみ）を返す。
+    price_ylim=None なら価格の範囲から自動で決め、札の距離も値幅に合わせる（実データ用）"""
+    gap, body = 0.8, 0.12
+    if price_ylim is None:
+        lo, hi = d.df.l.min(), d.df.h.max()
+        price_ylim, gap, body = (lo - 0.12 * (hi - lo), hi + 0.12 * (hi - lo)), 0.021 * (hi - lo), 0.003 * (hi - lo)
     fig = plt.figure(figsize=figsize, dpi=200)
     gs = fig.add_gridspec(2, 1, height_ratios=height_ratios, hspace=0.06,
                           left=0.04, right=0.88, top=0.915, bottom=0.05)
@@ -170,9 +178,9 @@ def make_two_pane(d, title, sub, height_ratios=(5, 3.2), figsize=(7.2, 9.6)):
     ax_s = fig.add_subplot(gs[1], sharex=ax_p)
     fig.text(0.04, 0.972, title, fontsize=14)
     fig.text(0.04, 0.946, sub, fontsize=9, color="#555")
-    setup_price_axes(ax_p, d.df, (52, 90), months=False)
-    draw_candles(ax_p, d.df, d.x)
-    draw_turn_labels(ax_p, d.df, d.x, d.turns)
+    setup_price_axes(ax_p, d.df, price_ylim, months=False, label=label)
+    draw_candles(ax_p, d.df, d.x, min_body=body)
+    draw_turn_labels(ax_p, d.df, d.x, d.turns, gap=gap)
     style_axes(ax_s, d.df, months=True)
-    footer(fig)
+    footer(fig, text=note)
     return fig, ax_p, ax_s
