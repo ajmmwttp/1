@@ -164,9 +164,10 @@ def footer(fig, y=0.012, text=NOTE_SYNTH):
 
 
 def make_two_pane(d, title, sub, height_ratios=(5, 3.2), figsize=(7.2, 9.6), price_ylim=(52, 90),
-                  label="TQQQ・日足（合成データ）", note=NOTE_SYNTH):
+                  label="TQQQ・日足（合成データ）", note=NOTE_SYNTH, candles=True):
     """上: ローソク足（描画済み） / 下: 別ウィンドウ（空。月ラベルのみ）を返す。
-    price_ylim=None なら価格の範囲から自動で決め、札の距離も値幅に合わせる（実データ用）"""
+    price_ylim=None なら価格の範囲から自動で決め、札の距離も値幅に合わせる（実データ用）。
+    candles=False なら終値の線で描く（高値・安値のないデータ用）"""
     gap, body = 0.8, 0.12
     if price_ylim is None:
         lo, hi = d.df.l.min(), d.df.h.max()
@@ -179,7 +180,10 @@ def make_two_pane(d, title, sub, height_ratios=(5, 3.2), figsize=(7.2, 9.6), pri
     fig.text(0.04, 0.972, title, fontsize=14)
     fig.text(0.04, 0.946, sub, fontsize=9, color="#555")
     setup_price_axes(ax_p, d.df, price_ylim, months=False, label=label)
-    draw_candles(ax_p, d.df, d.x, min_body=body)
+    if candles:
+        draw_candles(ax_p, d.df, d.x, min_body=body)
+    else:
+        ax_p.plot(d.x, d.df.c, color="#333", lw=1.1, zorder=4)
     draw_turn_labels(ax_p, d.df, d.x, d.turns, gap=gap)
     style_axes(ax_s, d.df, months=True)
     footer(fig, text=note)
