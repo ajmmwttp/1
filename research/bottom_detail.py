@@ -58,6 +58,14 @@ def detail(name, label, per):
                f" ／ 参考 RSI14（同じ点灯回数）{rhit.mean():.0%}（{len(rhit)}回）")
     yrs = pd.Series(hit, index=df.index[sig].year)
     out.append("  年ごと（当たり/点灯）: " + "  ".join(f"{y}: {int(g.sum())}/{len(g)}" for y, g in yrs.groupby(level=0)))
+    for y in sorted(set(df.index[sig].year)):  # 年ごとの詳しい値（点灯3回以上の年）
+        s_y = sig[df.index[sig].year == y]
+        if len(s_y) < 3:
+            continue
+        d_y = [1 - lo[pb[j[0]]] / c[t] for t in s_y if len(j := np.flatnonzero((pk == "L") & (pb >= t)))]
+        f_y = c[s_y[s_y + 10 < len(c)] + 10] / c[s_y[s_y + 10 < len(c)]] - 1
+        out.append(f"    {y}: 当たり {int(hit[df.index[sig].year == y].sum())}/{len(s_y)}・次の底までの追加の下げ 中央値 "
+                   f"{np.median(d_y):.1%}（最大 {max(d_y):.1%}）・10本後に上がった {np.mean(f_y > 0):.0%}（中央値 {np.median(f_y):+.1%}）")
     # 点灯から次の底（後から分かる安値）までの追加の下げ
     drops, worst = [], (0.0, None)
     for s in sig:
