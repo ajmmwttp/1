@@ -1,0 +1,55 @@
+               set  倍率                  指標 side  転換点/年  事前点灯率  何本前  的中率  AUC10
+     nasdaq3x/test 1.0               RSI14  top   7.77   0.27 18.0 0.33   0.58
+     nasdaq3x/test 1.0               RSI14  bot   7.77   0.23  1.0 1.00   0.79
+     nasdaq3x/test 1.0               ideal  top   7.77   1.00  4.0 0.77   0.88
+     nasdaq3x/test 1.0               ideal  bot   7.77   1.00  2.0 0.98   0.93
+     nasdaq3x/test 1.0 cand_classic:score2  top   7.77   0.47 14.0 0.34   0.66
+     nasdaq3x/test 1.0 cand_classic:score2  bot   7.77   0.50  2.0 0.97   0.87
+     nasdaq3x/test 1.5               RSI14  top   4.88   0.44 18.0 0.33   0.66
+     nasdaq3x/test 1.5               RSI14  bot   4.88   0.31  2.0 0.85   0.83
+     nasdaq3x/test 1.5               ideal  top   4.88   1.00  7.0 0.59   0.91
+     nasdaq3x/test 1.5               ideal  bot   4.88   1.00  4.0 0.90   0.95
+     nasdaq3x/test 1.5 cand_classic:score2  top   4.88   0.69 24.0 0.31   0.69
+     nasdaq3x/test 1.5 cand_classic:score2  bot   4.88   0.67  3.0 0.88   0.88
+     nasdaq3x/test 2.0               RSI14  top   2.63   0.71 47.0 0.27   0.72
+     nasdaq3x/test 2.0               RSI14  bot   2.50   0.45  2.0 0.67   0.82
+     nasdaq3x/test 2.0               ideal  top   2.63   1.00 24.0 0.30   0.95
+     nasdaq3x/test 2.0               ideal  bot   2.50   1.00  8.5 0.65   0.96
+     nasdaq3x/test 2.0 cand_classic:score2  top   2.63   0.95 55.5 0.22   0.73
+     nasdaq3x/test 2.0 cand_classic:score2  bot   2.50   0.90  5.5 0.72   0.86
+        sp3x/check 1.0               RSI14  top   8.01   0.18 16.5 0.29   0.57
+        sp3x/check 1.0               RSI14  bot   8.01   0.26  1.0 0.89   0.82
+        sp3x/check 1.0               ideal  top   8.01   1.00  2.0 0.78   0.88
+        sp3x/check 1.0               ideal  bot   8.01   1.00  2.0 0.94   0.93
+        sp3x/check 1.0 cand_classic:score2  top   8.01   0.31 21.5 0.26   0.65
+        sp3x/check 1.0 cand_classic:score2  bot   8.01   0.54  2.0 0.86   0.87
+        sp3x/check 1.5               RSI14  top   4.31   0.29 37.0 0.23   0.61
+        sp3x/check 1.5               RSI14  bot   4.31   0.37  4.0 0.86   0.85
+        sp3x/check 1.5               ideal  top   4.31   1.00  8.0 0.61   0.91
+        sp3x/check 1.5               ideal  bot   4.31   1.00  5.0 0.82   0.94
+        sp3x/check 1.5 cand_classic:score2  top   4.31   0.48 25.5 0.21   0.67
+        sp3x/check 1.5 cand_classic:score2  bot   4.31   0.76  6.0 0.75   0.87
+        sp3x/check 2.0               RSI14  top   2.72   0.42 47.0 0.21   0.66
+        sp3x/check 2.0               RSI14  bot   2.67   0.48  7.0 0.65   0.85
+        sp3x/check 2.0               ideal  top   2.72   1.00 12.0 0.42   0.93
+        sp3x/check 2.0               ideal  bot   2.67   1.00  9.5 0.56   0.97
+        sp3x/check 2.0 cand_classic:score2  top   2.72   0.68 30.0 0.18   0.68
+        sp3x/check 2.0 cand_classic:score2  bot   2.67   0.88 13.5 0.56   0.86
+sp3x_close/oos2019 1.0               RSI14  top   5.26   0.43 20.0 0.31   0.65
+sp3x_close/oos2019 1.0               RSI14  bot   5.01   0.30  4.5 1.00   0.83
+sp3x_close/oos2019 1.0               ideal  top   5.26   1.00  7.0 0.52   0.91
+sp3x_close/oos2019 1.0               ideal  bot   5.01   1.00  4.0 0.95   0.94
+sp3x_close/oos2019 1.0 cand_classic:score2  top   5.26   0.62 25.0 0.28   0.68
+sp3x_close/oos2019 1.0 cand_classic:score2  bot   5.01   0.75  4.0 0.77   0.90
+sp3x_close/oos2019 1.5               RSI14  top   3.01   0.67 45.5 0.25   0.72
+sp3x_close/oos2019 1.5               RSI14  bot   3.01   0.42  7.0 0.67   0.83
+sp3x_close/oos2019 1.5               ideal  top   3.01   1.00 13.5 0.33   0.92
+sp3x_close/oos2019 1.5               ideal  bot   3.01   1.00  6.0 0.83   0.97
+sp3x_close/oos2019 1.5 cand_classic:score2  top   3.01   0.92 33.0 0.26   0.71
+sp3x_close/oos2019 1.5 cand_classic:score2  bot   3.01   0.83 11.5 0.50   0.87
+sp3x_close/oos2019 2.0               RSI14  top   2.50   0.70 48.0 0.25   0.74
+sp3x_close/oos2019 2.0               RSI14  bot   2.50   0.50  7.0 0.67   0.86
+sp3x_close/oos2019 2.0               ideal  top   2.50   1.00 13.5 0.30   0.92
+sp3x_close/oos2019 2.0               ideal  bot   2.50   1.00  7.5 0.80   0.97
+sp3x_close/oos2019 2.0 cand_classic:score2  top   2.50   0.90 33.0 0.23   0.73
+sp3x_close/oos2019 2.0 cand_classic:score2  bot   2.50   0.90 13.0 0.45   0.88
