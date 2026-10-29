@@ -40,18 +40,22 @@ def leverage(base, k=3.0, expense=EXPENSE):
     return out
 
 
-def load(name):
-    """3倍レバレッジ近似の OHLC（列 o,h,l,c / DatetimeIndex）。sp3x_close は終値のみ（o=h=l=c）"""
+def load_base(name):
+    """レバレッジをかける前の指数 OHLC（列 o,h,l,c）。sp3x_close は終値のみ（o=h=l=c）"""
     src = SETS[name][0]
     if src == "sp500_close":
         from skfolio.datasets import load_sp500_index
         c = load_sp500_index()["SP500"].astype(float)
-        base = pd.DataFrame({"o": c, "h": c, "l": c, "c": c})
-    else:
-        from arch.data import nasdaq, sp500
-        base = (nasdaq if src == "nasdaq" else sp500).load()[["Open", "High", "Low", "Close"]].astype(float)
-        base.columns = ["o", "h", "l", "c"]
-    return leverage(base)
+        return pd.DataFrame({"o": c, "h": c, "l": c, "c": c})
+    from arch.data import nasdaq, sp500
+    base = (nasdaq if src == "nasdaq" else sp500).load()[["Open", "High", "Low", "Close"]].astype(float)
+    base.columns = ["o", "h", "l", "c"]
+    return base
+
+
+def load(name):
+    """3倍レバレッジ近似の OHLC（列 o,h,l,c / DatetimeIndex）。sp3x_close は終値のみ（o=h=l=c）"""
+    return leverage(load_base(name))
 
 
 def period_mask(df, period):
