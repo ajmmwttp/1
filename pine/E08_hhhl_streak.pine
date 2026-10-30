@@ -1,0 +1,127 @@
+//@version=6
+// ============================================================================
+// E8 高値・安値切り上げ連続
+// 要素: 連続（カウント・疲弊）　種類: 先行（極値の足）
+// 高値・安値の切り上げ(切り下げ)が何日続いたかの階段. 5日連続で上限. 途切れると1本ごとに半分になる.
+// 読み方: メインラインが赤の「高値圏ライン」を上抜け → 高値圏突入 / 緑の「安値圏ライン」を下抜け → 安値圏突入.
+//         ゾーンから戻ったら離脱(小さな▼▲). ラベルとアラートは足の確定時だけ出る(リペイントなし).
+// 既定値: TQQQ などの3倍レバETFの日足向け. 検証: research/turn_zones (NASDAQ×3合成 1999-2018).
+// ============================================================================
+indicator('E8 高値・安値切り上げ連続', shorttitle='E8連続', overlay=false, precision=0, max_labels_count=500, max_bars_back=1000)
+
+// ---- 色 ----
+color C_RED  = #d32f2f
+color C_ORG  = #f57c00
+color C_GRY  = #9e9e9e
+color C_LGRN = #66bb6a
+color C_GRN  = #2e7d32
+
+// ---- 共通入力 ----
+GV = '表示'
+GL = 'ライン'
+lw       = input.int(2, 'メインラインの太さ', minval=1, maxval=4, group=GV)
+showIn   = input.bool(true, '突入ラベル', group=GV)
+showOut  = input.bool(true, '離脱の印(▼▲)', group=GV)
+cool     = input.int(3, '同じ側の突入ラベルの間隔(本)', minval=0, group=GV)
+showFill = input.bool(true, 'ライン超えの塗り', group=GV)
+showBg   = input.bool(false, 'ゾーン中の背景色', group=GV)
+showTbl  = input.bool(true, '状態テーブル', group=GV)
+tblPosS  = input.string('右上', 'テーブル位置', options=['右上', '右下', '左上', '左下'], group=GV)
+tblSizeS = input.string('小', 'テーブル文字', options=['小', '中', '大'], group=GV)
+hyst     = input.float(0.0, '離脱の遊び(0=なし)', minval=0.0, maxval=30.0, group=GL)
+
+// ======== ここから E8連続 固有の計算 ========
+G1 = '計算'
+N   = input.int(5, '飽和カウント', minval=2, maxval=15, group=G1)
+rho = input.float(0.5, '途切れ後の減衰', minval=0.0, maxval=0.9, step=0.1, group=G1)
+U   = input.float(65.0, '高値圏ライン', group=GL)
+L   = input.float(-65.0, '安値圏ライン', group=GL)
+f_runLen(bool cnd) =>
+    var int r = 0
+    r := cnd ? r + 1 : 0
+    r
+f_hold(float f, float rr) =>
+    var float m = 0.0
+    m := math.max(f, rr * m)
+    m
+float nn = N
+bool hh = bar_index >= 1 and high > high[1]
+bool hl = bar_index >= 1 and low > low[1]
+bool ll = bar_index >= 1 and low < low[1]
+bool lh = bar_index >= 1 and high < high[1]
+float cHH = f_hold(math.min(f_runLen(hh) / nn, 1.0), rho) - f_hold(math.min(f_runLen(ll) / nn, 1.0), rho)
+float cHL = f_hold(math.min(f_runLen(hl) / nn, 1.0), rho) - f_hold(math.min(f_runLen(lh) / nn, 1.0), rho)
+float osc = 100.0 * (cHH + cHL) / 2.0
+string sfxTop = '(連続)'
+string sfxBot = '(連続)'
+string note = ''
+
+// ======== ここから下は10本共通 ========
+
+// ---- ゾーン判定 (Python の zones() と同じ) ----
+var int zone  = 0          // 1=高値圏, -1=安値圏, 0=中立
+var int zBars = 0
+var int lastTopLbl = na
+var int lastBotLbl = na
+int prevZ = zone
+int newZ  = zone
+if not na(osc) and not na(U) and not na(L)
+    if zone == 1 and osc <= U - hyst
+        newZ := 0
+    else if zone == -1 and osc >= L + hyst
+        newZ := 0
+    if newZ == 0
+        newZ := osc > U ? 1 : osc < L ? -1 : 0
+bool topIn  = newZ == 1 and prevZ != 1
+bool topOut = prevZ == 1 and newZ != 1
+bool botIn  = newZ == -1 and prevZ != -1
+bool botOut = prevZ == -1 and newZ != -1
+zBars := newZ == 0 ? 0 : newZ == prevZ ? zBars + 1 : 1
+zone  := newZ
+
+// ---- 描画 ----
+color oscCol = na(osc) ? na : osc > U ? C_RED : osc < L ? C_GRN : osc >= 0 ? color.from_gradient(osc, 0.3 * U, U, C_GRY, C_ORG) : color.from_gradient(osc, L, 0.3 * L, C_LGRN, C_GRY)
+pOsc = plot(osc, 'メインライン', color=oscCol, linewidth=lw)
+pU   = plot(U, '高値圏ライン', color=C_RED, linewidth=1, display=display.pane)
+pL   = plot(L, '安値圏ライン', color=C_GRN, linewidth=1, display=display.pane)
+pTop = plot(100, '上端', color=color.new(C_RED, 100), display=display.pane, editable=false)
+pBot = plot(-100, '下端', color=color.new(C_GRN, 100), display=display.pane, editable=false)
+hline(0, '0', color=color.new(C_GRY, 50), linestyle=hline.style_dotted)
+fill(pU, pTop, color=color.new(C_RED, 94), title='高値圏の帯')
+fill(pL, pBot, color=color.new(C_GRN, 94), title='安値圏の帯')
+fill(pOsc, pU, color=showFill and osc > U ? color.new(C_RED, 62) : na, title='高値圏の塗り')
+fill(pOsc, pL, color=showFill and osc < L ? color.new(C_GRN, 62) : na, title='安値圏の塗り')
+bgcolor(showBg and zone == 1 ? color.new(C_RED, 93) : showBg and zone == -1 ? color.new(C_GRN, 93) : na, title='ゾーン背景')
+
+// ---- ラベル (確定足のみ). ライン上に付け, 本体は中立側に出すので画面外に切れない ----
+if barstate.isconfirmed
+    if topIn and showIn and (na(lastTopLbl) or bar_index - lastTopLbl > cool)
+        label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
+        lastTopLbl := bar_index
+    if botIn and showIn and (na(lastBotLbl) or bar_index - lastBotLbl > cool)
+        label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
+        lastBotLbl := bar_index
+    if topOut and showOut
+        label.new(bar_index, U, '', style=label.style_triangledown, color=color.new(C_RED, 30), size=size.tiny)
+    if botOut and showOut
+        label.new(bar_index, L, '', style=label.style_triangleup, color=color.new(C_GRN, 30), size=size.tiny)
+
+// ---- 状態テーブル ----
+var table tb = table.new(tblPosS == '右上' ? position.top_right : tblPosS == '右下' ? position.bottom_right : tblPosS == '左上' ? position.top_left : position.bottom_left, 1, 1)
+if showTbl and barstate.islast
+    string tsz = tblSizeS == '大' ? size.large : tblSizeS == '中' ? size.normal : size.small
+    string st  = zone == 1 ? '高値圏 ' + str.tostring(zBars) + '本目' : zone == -1 ? '安値圏 ' + str.tostring(zBars) + '本目' : na(osc) ? '計算中' : osc >= 0.75 * U ? '上ライン接近' : osc <= 0.75 * L ? '下ライン接近' : '中立'
+    string ds  = na(osc) ? '' : zone == 1 ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
+    string pv  = barstate.isconfirmed ? '' : '（確定前）'
+    color tc   = zone == 1 ? C_RED : zone == -1 ? C_GRN : chart.fg_color
+    table.cell(tb, 0, 0, '【E8連続】状態: ' + st + ds + pv + note, text_color=tc, text_size=tsz, bgcolor=color.new(chart.bg_color, 20))
+
+// ---- アラート (確定足のみ. アラート作成時は「バーの終値で1回」を選ぶ) ----
+alertcondition(topIn and barstate.isconfirmed, '高値圏突入', '{{ticker}} E8連続 高値圏突入')
+alertcondition(topOut and barstate.isconfirmed, '高値圏離脱', '{{ticker}} E8連続 高値圏離脱')
+alertcondition(botIn and barstate.isconfirmed, '安値圏突入', '{{ticker}} E8連続 安値圏突入')
+alertcondition(botOut and barstate.isconfirmed, '安値圏離脱', '{{ticker}} E8連続 安値圏離脱')
+alertcondition((topIn or topOut or botIn or botOut) and barstate.isconfirmed, 'ゾーン変化(いずれか)', '{{ticker}} E8連続 ゾーン変化')
+if barstate.isconfirmed and (topIn or topOut or botIn or botOut)
+    string evt = topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
+    alert(syminfo.ticker + ' E8連続 ' + evt + ' 値=' + str.tostring(osc, '#'), alert.freq_once_per_bar_close)
