@@ -56,8 +56,8 @@ G1 = '計算'
 r1   = input.int(6, '1段目EMA', minval=2, group=G1)
 r2   = input.int(3, '2段目EMA', minval=1, group=G1)
 mode = input.string('自動調整', 'ラインの種類', options=['自動調整', '固定'], group=GL)
-fixT = input.float(55.0, '固定ライン ±', minval=10.0, maxval=95.0, group=GL)
-adN  = input.int(120, '自動調整: 期間(本)', minval=30, group=GL)
+fixT = input.float(55.0, '固定ライン ±', minval=10.0, maxval=95.0, group=GL, tooltip='「固定」のときと, 自動調整の準備が整うまでのライン')
+adN  = input.int(120, '自動調整: 期間(本)', minval=30, maxval=500, group=GL, tooltip='この本数の線の値の上位10%/下位10%の境目をラインにする (35〜75 の範囲)')
 adP  = input.float(90.0, '自動調整: 上側パーセント', minval=60.0, maxval=99.0, group=GL)
 float pc  = nz(ta.change(close))
 float num = f_ema(f_ema(pc, r1), r2)
@@ -70,7 +70,7 @@ float U   = fx or na(pu) ? fixT : math.max(35.0, math.min(75.0, pu))
 float L   = fx or na(pl) ? -fixT : math.min(-35.0, math.max(-75.0, pl))
 string sfxTop = ''
 string sfxBot = ''
-string note = ''
+string note = not fx and na(pu) ? ' / 自動調整の準備中(固定±' + str.tostring(fixT, '#') + ')' : ''
 
 // ======== ここから下は10本共通 ========
 
@@ -110,24 +110,31 @@ fill(pOsc, pL, color=showFill and osc < L ? color.new(C_GRN, 62) : na, title='�
 bgcolor(showBg and zone == 1 ? color.new(C_RED, 93) : showBg and zone == -1 ? color.new(C_GRN, 93) : na, title='ゾーン背景')
 
 // ---- ラベル (確定足のみ). ライン上に付け, 本体は中立側に出すので画面外に切れない ----
+// 間隔(cool)で突入ラベルを省いたゾーンは, 離脱の印も出さない (離脱を先に処理するので反転した足でも正しい)
+var bool topLbld = true
+var bool botLbld = true
 if barstate.isconfirmed
-    if topIn and showIn and (na(lastTopLbl) or bar_index - lastTopLbl > cool)
-        label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
-        lastTopLbl := bar_index
-    if botIn and showIn and (na(lastBotLbl) or bar_index - lastBotLbl > cool)
-        label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
-        lastBotLbl := bar_index
-    if topOut and showOut
+    if topOut and showOut and topLbld
         label.new(bar_index, U, '', style=label.style_triangledown, color=color.new(C_RED, 30), size=size.tiny)
-    if botOut and showOut
+    if botOut and showOut and botLbld
         label.new(bar_index, L, '', style=label.style_triangleup, color=color.new(C_GRN, 30), size=size.tiny)
+    if topIn
+        topLbld := not showIn or na(lastTopLbl) or bar_index - lastTopLbl > cool
+        if showIn and topLbld
+            label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
+            lastTopLbl := bar_index
+    if botIn
+        botLbld := not showIn or na(lastBotLbl) or bar_index - lastBotLbl > cool
+        if showIn and botLbld
+            label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
+            lastBotLbl := bar_index
 
 // ---- 状態テーブル ----
 var table tb = table.new(tblPosS == '右上' ? position.top_right : tblPosS == '右下' ? position.bottom_right : tblPosS == '左上' ? position.top_left : position.bottom_left, 1, 1)
 if showTbl and barstate.islast
     string tsz = tblSizeS == '大' ? size.large : tblSizeS == '中' ? size.normal : size.small
     string st  = zone == 1 ? '高値圏 ' + str.tostring(zBars) + '本目' : zone == -1 ? '安値圏 ' + str.tostring(zBars) + '本目' : na(osc) ? '計算中' : osc >= 0.75 * U ? '上ライン接近' : osc <= 0.75 * L ? '下ライン接近' : '中立'
-    string ds  = na(osc) ? '' : zone == 1 ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
+    string ds  = na(osc) ? '' : zone == 1 and osc > U ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 and osc < L ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : zone != 0 ? ' / 離脱の遊びの中' : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
     string pv  = barstate.isconfirmed ? '' : '（確定前）'
     color tc   = zone == 1 ? C_RED : zone == -1 ? C_GRN : chart.fg_color
     table.cell(tb, 0, 0, '【E2勢い】状態: ' + st + ds + pv + note, text_color=tc, text_size=tsz, bgcolor=color.new(chart.bg_color, 20))
@@ -139,5 +146,5 @@ alertcondition(botIn and barstate.isconfirmed, '安値圏突入', '{{ticker}} E2
 alertcondition(botOut and barstate.isconfirmed, '安値圏離脱', '{{ticker}} E2勢い 安値圏離脱')
 alertcondition((topIn or topOut or botIn or botOut) and barstate.isconfirmed, 'ゾーン変化(いずれか)', '{{ticker}} E2勢い ゾーン変化')
 if barstate.isconfirmed and (topIn or topOut or botIn or botOut)
-    string evt = topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
+    string evt = topOut and botIn ? '高値圏離脱→安値圏突入' : botOut and topIn ? '安値圏離脱→高値圏突入' : topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
     alert(syminfo.ticker + ' E2勢い ' + evt + ' 値=' + str.tostring(osc, '#'), alert.freq_once_per_bar_close)

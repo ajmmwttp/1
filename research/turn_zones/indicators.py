@@ -86,15 +86,18 @@ def e04_volume_cog(df, ln=10, atrLen=14, normLen=252, kk=1.5, th=60.0):
     """
     _, h, l, c = _ohlc(df)
     v = np.nan_to_num(df["Volume"].to_numpy(float))
+    w = (v > 0).astype(float)       # 出来高の無い足は, 出来高の重心にも価格の平均にも入れない
     tp = (h + l + c) / 3
     evh = ema_p(v * tp, ln)
     ev = ema_p(v, ln)
-    ewp = ema_p(tp, ln)
+    ewh = ema_p(w * tp, ln)
+    ew = ema_p(w, ln)
     atr = rma_p(tr_p(h, l, c), atrLen)
-    ok = (ev > 0) & (atr > 0)
-    raw = np.where(ok, (evh / np.where(ok, ev, 1.0) - ewp) / np.where(ok, atr, 1.0), 0.0)
+    ok = (ev > 0) & (ew > 0) & (atr > 0)
+    raw = np.where(ok, (evh / np.where(ok, ev, 1.0) - ewh / np.where(ok, ew, 1.0)) / np.where(ok, atr, 1.0), 0.0)
     rms = np.sqrt(pd.Series(raw * raw).rolling(normLen).mean().to_numpy())
-    line = np.where(rms > 0, 100 * tanh_p(raw / np.where(rms > 0, rms, 1.0) / kk), np.nan)
+    good = (rms > 0) & (np.cumsum(v > 0) >= normLen)
+    line = np.where(good, 100 * tanh_p(raw / np.where(good, rms, 1.0) / kk), np.nan)
     return dict(line=line, U=_const(len(c), th), L=_const(len(c), -th), raw=raw)
 
 
@@ -187,6 +190,7 @@ def e09_reversal_impulse(df, pLen=8, sm=3, scale=0.25, th=45.0):
     r = np.where(np.isnan(Pp), np.nan,
                  np.maximum(Pp, 0) * np.maximum(-clv, 0) - np.maximum(-Pp, 0) * np.maximum(clv, 0))
     line = 100 * tanh_p(ema_p(r, sm) / scale)
+    line[:20] = np.nan        # 最初の20本は初期値の影響が大きいので出さない (Pine と同じ)
     return dict(line=line, U=_const(len(c), th), L=_const(len(c), -th))
 
 
@@ -209,6 +213,7 @@ def e10_vol_term_gauge(df, fL=3, sL=30, gL=5, sh=4.0, wb=0.5, smL=3, kUp=0.45, k
     xx = np.where(np.isnan(vr), np.nan, np.where(vr > 0, -vr * w, -vr))
     xs = ema_p(xx, smL)
     line = np.where(np.isnan(xs), np.nan, 100 * tanh_p(xs / np.where(xs >= 0, kUp, kDn)))
+    line[:5 * sL] = np.nan    # 最初の 5×基準期間 は初期値の影響が大きいので出さない (Pine と同じ)
     return dict(line=line, U=_const(len(c), th), L=_const(len(c), -th))
 
 

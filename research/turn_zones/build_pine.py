@@ -122,6 +122,8 @@ f_kcdf(float v, array<float> a, float rho, float c0) =>
     acc / a.size()
 
 // [fromBar, 今] の中で最初に現れる x の最大(最小)とその足. 最大999本前まで
+// 注意: 条件付きで呼ぶが, 読むのはグローバル系列 x の履歴なので値は正しい.
+//       x を引数に変えないこと (エディタに「毎回呼ぶべき」という黄色い警告が出ても無視してよい)
 f_scan(int fromBar, bool wantMax) =>
     int n = math.min(bar_index - fromBar, 999)
     float bv = x[n]
@@ -271,24 +273,31 @@ fill(pOsc, pL, color=showFill and osc < L ? color.new(C_GRN, 62) : na, title='�
 bgcolor(showBg and zone == 1 ? color.new(C_RED, 93) : showBg and zone == -1 ? color.new(C_GRN, 93) : na, title='ゾーン背景')
 
 // ---- ラベル (確定足のみ). ライン上に付け, 本体は中立側に出すので画面外に切れない ----
+// 間隔(cool)で突入ラベルを省いたゾーンは, 離脱の印も出さない (離脱を先に処理するので反転した足でも正しい)
+var bool topLbld = true
+var bool botLbld = true
 if barstate.isconfirmed
-    if topIn and showIn and (na(lastTopLbl) or bar_index - lastTopLbl > cool)
-        label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
-        lastTopLbl := bar_index
-    if botIn and showIn and (na(lastBotLbl) or bar_index - lastBotLbl > cool)
-        label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
-        lastBotLbl := bar_index
-    if topOut and showOut
+    if topOut and showOut and topLbld
         label.new(bar_index, U, '', style=label.style_triangledown, color=color.new(C_RED, 30), size=size.tiny)
-    if botOut and showOut
+    if botOut and showOut and botLbld
         label.new(bar_index, L, '', style=label.style_triangleup, color=color.new(C_GRN, 30), size=size.tiny)
+    if topIn
+        topLbld := not showIn or na(lastTopLbl) or bar_index - lastTopLbl > cool
+        if showIn and topLbld
+            label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
+            lastTopLbl := bar_index
+    if botIn
+        botLbld := not showIn or na(lastBotLbl) or bar_index - lastBotLbl > cool
+        if showIn and botLbld
+            label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
+            lastBotLbl := bar_index
 
 // ---- 状態テーブル ----
 var table tb = table.new(tblPosS == '右上' ? position.top_right : tblPosS == '右下' ? position.bottom_right : tblPosS == '左上' ? position.top_left : position.bottom_left, 1, 1)
 if showTbl and barstate.islast
     string tsz = tblSizeS == '大' ? size.large : tblSizeS == '中' ? size.normal : size.small
     string st  = zone == 1 ? '高値圏 ' + str.tostring(zBars) + '本目' : zone == -1 ? '安値圏 ' + str.tostring(zBars) + '本目' : na(osc) ? '計算中' : osc >= 0.75 * U ? '上ライン接近' : osc <= 0.75 * L ? '下ライン接近' : '中立'
-    string ds  = na(osc) ? '' : zone == 1 ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
+    string ds  = na(osc) ? '' : zone == 1 and osc > U ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 and osc < L ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : zone != 0 ? ' / 離脱の遊びの中' : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
     string pv  = barstate.isconfirmed ? '' : '（確定前）'
     color tc   = zone == 1 ? C_RED : zone == -1 ? C_GRN : chart.fg_color
     table.cell(tb, 0, 0, '【{tag}】状態: ' + st + ds + pv + note, text_color=tc, text_size=tsz, bgcolor=color.new(chart.bg_color, 20))
@@ -300,7 +309,7 @@ alertcondition(botIn and barstate.isconfirmed, '安値圏突入', '{{{{ticker}}}
 alertcondition(botOut and barstate.isconfirmed, '安値圏離脱', '{{{{ticker}}}} {tag} 安値圏離脱')
 alertcondition((topIn or topOut or botIn or botOut) and barstate.isconfirmed, 'ゾーン変化(いずれか)', '{{{{ticker}}}} {tag} ゾーン変化')
 if barstate.isconfirmed and (topIn or topOut or botIn or botOut)
-    string evt = topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
+    string evt = topOut and botIn ? '高値圏離脱→安値圏突入' : botOut and topIn ? '安値圏離脱→高値圏突入' : topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
     alert(syminfo.ticker + ' {tag} ' + evt + ' 値=' + str.tostring(osc, '#'), alert.freq_once_per_bar_close)
 """
 
@@ -316,12 +325,12 @@ n    = input.int(75, '回帰期間(本)', minval=40, maxval=300, group=G1)
 smE  = input.int(5, '仕上げEMA', minval=1, group=G1)
 kU   = input.float(2.3, '上側スケール', minval=0.5, step=0.1, group=G1)
 kD   = input.float(2.6, '下側スケール', minval=0.5, step=0.1, group=G1)
-U    = input.float(60.0, '高値圏ライン', group=GL)
-L    = input.float(-60.0, '安値圏ライン', group=GL)
+U    = input.float(60.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='線がこの値を上抜けたら高値圏突入. +60 ≒ トレンド線から普段のブレ幅の約1.6倍上')
+L    = input.float(-60.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='線がこの値を下抜けたら安値圏突入. -60 ≒ トレンド線から普段のブレ幅の約1.8倍下')
 float y    = math.log(close)
 float fit  = ta.linreg(y, n, 0)
 float b    = fit - ta.linreg(y, n, 1)          // 回帰の傾き
-float vy   = ta.variance(y, n)                  // 母分散
+float vy   = ta.variance(y, n, true)            // 母分散 (biased)
 float sres = na(vy) or na(b) ? na : math.sqrt(math.max(vy - b * b * (n * n - 1) / 12.0, 0.0))
 float zc   = na(sres) ? na : sres > 0 ? (y - fit) / sres : 0.0
 float zsm  = f_ema(zc, smE)
@@ -339,8 +348,8 @@ G1 = '計算'
 r1   = input.int(6, '1段目EMA', minval=2, group=G1)
 r2   = input.int(3, '2段目EMA', minval=1, group=G1)
 mode = input.string('自動調整', 'ラインの種類', options=['自動調整', '固定'], group=GL)
-fixT = input.float(55.0, '固定ライン ±', minval=10.0, maxval=95.0, group=GL)
-adN  = input.int(120, '自動調整: 期間(本)', minval=30, group=GL)
+fixT = input.float(55.0, '固定ライン ±', minval=10.0, maxval=95.0, group=GL, tooltip='「固定」のときと, 自動調整の準備が整うまでのライン')
+adN  = input.int(120, '自動調整: 期間(本)', minval=30, maxval=500, group=GL, tooltip='この本数の線の値の上位10%/下位10%の境目をラインにする (35〜75 の範囲)')
 adP  = input.float(90.0, '自動調整: 上側パーセント', minval=60.0, maxval=99.0, group=GL)
 float pc  = nz(ta.change(close))
 float num = f_ema(f_ema(pc, r1), r2)
@@ -353,7 +362,7 @@ float U   = fx or na(pu) ? fixT : math.max(35.0, math.min(75.0, pu))
 float L   = fx or na(pl) ? -fixT : math.min(-35.0, math.max(-75.0, pl))
 string sfxTop = ''
 string sfxBot = ''
-string note = ''
+string note = not fx and na(pu) ? ' / 自動調整の準備中(固定±' + str.tostring(fixT, '#') + ')' : ''
 """),
     "E3": dict(
         title="E3 失速率", tag="E3失速", element="加速・失速（勢いの変化）", kind="確認寄り（極値の0〜1本後）",
@@ -365,7 +374,7 @@ P    = input.int(4, '速度の平滑期間', minval=2, group=G1)
 sigN = input.int(100, '平均速度の期間', minval=20, group=G1)
 flr  = input.float(1.0, '小さな脚のフロア(σ倍)', minval=0.1, step=0.1, group=G1)
 post = input.int(3, '仕上げEMA', minval=1, group=G1)
-T    = input.float(45.0, 'ライン ±', minval=10.0, maxval=95.0, group=GL)
+T    = input.float(45.0, 'ライン ±', minval=10.0, maxval=95.0, group=GL, tooltip='±45 = 今の上昇(下落)の最高速度から45%以上減速したら突入')
 float r   = nz(math.log(close / close[1]))
 float v   = f_ss(r, P)
 float sig = f_rma(math.abs(v), sigN)
@@ -397,20 +406,25 @@ atrLen  = input.int(14, 'ATR期間', minval=1, group=G1)
 normLen = input.int(252, '正規化期間(本)', minval=50, group=G1)
 kk      = input.float(1.5, 'スケール', minval=0.1, step=0.1, group=G1)
 useDV   = input.bool(true, '売買代金(出来高×終値)で計算', group=G1)
-U       = input.float(60.0, '高値圏ライン', group=GL)
-L       = input.float(-60.0, '安値圏ライン', group=GL)
+U       = input.float(60.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='高値帯で大商いが続くと上抜ける (天井警戒)')
+L       = input.float(-60.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='安値帯で大商いが続くと下抜ける (底警戒)')
 float v    = nz(volume) * (useDV ? close : 1.0)
+float wv   = v > 0 ? 1.0 : 0.0                 // 出来高の無い足(na/0)は, 出来高の重心にも価格の平均にも入れない
 float evh  = f_ema(v * hlc3, lenV)
 float ev   = f_ema(v, lenV)
-float ewp  = f_ema(hlc3, lenV)
+float ewh  = f_ema(wv * hlc3, lenV)
+float ew   = f_ema(wv, lenV)
 float atr  = f_rma(ta.tr(true), atrLen)
-float raw  = ev > 0 and atr > 0 ? (evh / ev - ewp) / atr : 0.0
+float raw  = ev > 0 and ew > 0 and atr > 0 ? (evh / ev - ewh / ew) / atr : 0.0
+var int nV = 0
+nV += v > 0 ? 1 : 0
 float rms  = math.sqrt(ta.sma(raw * raw, normLen))
-float osc  = rms > 0 ? 100.0 * f_tanh(raw / rms / kk) : na
-float cumV = ta.cum(nz(volume))
+float oscC = rms > 0 and nV >= normLen ? 100.0 * f_tanh(raw / rms / kk) : na
+// 足の途中は出来高がまだ途中なので, 確定するまで前の足の値を出す (確定した足の値は変わらない)
+float osc  = barstate.isconfirmed ? oscC : oscC[1]
 string sfxTop = '(出来高)'
 string sfxBot = '(出来高)'
-string note = cumV == 0 ? ' / 出来高データなし' : ''
+string note = (nV == 0 ? ' / この銘柄には出来高データがありません' : '') + (barstate.isconfirmed ? '' : ' / 確定まで前の足の値')
 """),
     "E5": dict(
         title="E5 日柄成熟度（大波）", tag="E5日柄", element="日柄（時間）", kind="先行（最後の新値の足で山）",
@@ -423,8 +437,8 @@ nAtr = input.int(50, '対数ATR期間', minval=10, group=G1)
 K    = input.int(8, '比較する過去スイング数', minval=3, group=G1)
 Kmin = input.int(3, '必要スイング数', minval=1, group=G1)
 tau  = input.float(4.0, '更新停止の減衰(本)', minval=0.5, group=G1)
-U    = input.float(70.0, '高値圏ライン', group=GL)
-L    = input.float(-70.0, '安値圏ライン', group=GL)
+U    = input.float(70.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='+70 ≒ 今の上げの波が, 過去の上げの大波の約7割より長く続いていて, まだ新値を取っている')
+L    = input.float(-70.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='-70 ≒ 今の下げの波が, 過去の下げの大波の約7割より長く続いていて, まだ新安値を取っている')
 float x  = math.log(close)
 """,
         code="""
@@ -434,7 +448,7 @@ sw.step(x, th, K)
 float osc = na
 if sw.dir != 0
     array<float> Ds = sw.dir == 1 ? sw.dU : sw.dD
-    if Ds.size() >= Kmin
+    if Ds.size() >= math.min(Kmin, K)
         osc := 100.0 * sw.dir * f_kcdf(float(sw.eB - sw.pB), Ds, 0.15, 1.0) * math.exp(-math.pow((bar_index - sw.eB) / tau, 2))
 string sfxTop = '(日柄)'
 string sfxBot = '(日柄)'
@@ -451,8 +465,8 @@ nAtr = input.int(50, '対数ATR期間', minval=10, group=G1)
 K    = input.int(8, '比較する過去スイング数', minval=3, group=G1)
 Kmin = input.int(3, '必要スイング数', minval=1, group=G1)
 hand = input.float(0.8, '0に戻る戻り幅(×θ)', minval=0.2, maxval=1.0, step=0.1, group=G1)
-U    = input.float(70.0, '高値圏ライン', group=GL)
-L    = input.float(-55.0, '安値圏ライン', group=GL)
+U    = input.float(70.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='+70 ≒ 今の上げ幅が過去8回の上げの波の約7割より大きく, 高値の近くにいる')
+L    = input.float(-55.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='-55 ≒ 今の下げ幅が過去8回の下げの波の半分以上より大きく, 安値の近くにいる')
 float x  = math.log(close)
 """,
         code="""
@@ -462,7 +476,7 @@ sw.step(x, th, K)
 float raw = na
 if sw.dir != 0
     array<float> As = sw.dir == 1 ? sw.aU : sw.aD
-    if As.size() >= Kmin
+    if As.size() >= math.min(Kmin, K)
         float u = math.max(0.0, math.min(1.0, sw.dir * (sw.eX - x) / (hand * th)))
         raw := 100.0 * sw.dir * f_kcdf(math.abs(sw.eX - sw.pX), As, 0.15, 0.0) * (1.0 - u)
 float osc = (3.0 * raw + 2.0 * raw[1] + raw[2]) / 6.0
@@ -476,10 +490,10 @@ string note = ''
         about="直近20本の値動きを1周期の波(cos)と照らし合わせて, サイクルの中で今どこにいるかを読む. トレンド中は0付近.",
         code="""
 G1 = '計算'
-P  = input.int(20, 'サイクル長 P', minval=6, maxval=120, group=G1)
-z0 = input.float(0.5, '位相確度の下限', minval=0.05, maxval=1.0, step=0.05, group=G1)
-U  = input.float(85.0, '高値圏ライン', group=GL)
-L  = input.float(-85.0, '安値圏ライン', group=GL)
+P  = input.int(20, 'サイクル長 P', minval=6, maxval=120, group=G1, tooltip='想定するサイクルの長さ(本). TQQQ 日足は20前後, SOXL は16〜18, SPXL は20〜24 が目安')
+z0 = input.float(0.5, '位相確度の下限', minval=0.05, maxval=1.0, step=0.05, group=G1, tooltip='波の形がはっきりしない時に線を0へ寄せる強さ')
+U  = input.float(85.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='+85 ≒ サイクルの山の前後 約2本以内')
+L  = input.float(-85.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='-85 ≒ サイクルの谷の前後 約2本以内')
 float nn  = P
 float sx  = 0.0
 float sxx = 0.0
@@ -516,10 +530,10 @@ string note = ''
         about="高値・安値の切り上げ(切り下げ)が何日続いたかの階段. 5日連続で上限. 途切れると1本ごとに半分になる.",
         code="""
 G1 = '計算'
-N   = input.int(5, '飽和カウント', minval=2, maxval=15, group=G1)
-rho = input.float(0.5, '途切れ後の減衰', minval=0.0, maxval=0.9, step=0.1, group=G1)
-U   = input.float(65.0, '高値圏ライン', group=GL)
-L   = input.float(-65.0, '安値圏ライン', group=GL)
+N   = input.int(5, '飽和カウント', minval=2, maxval=15, group=G1, tooltip='この日数続いたら最大(±100)とみなす')
+rho = input.float(0.5, '途切れ後に残す割合', minval=0.0, maxval=0.9, step=0.1, group=G1, tooltip='連続が途切れた後, 1本ごとに前の値のこの割合を残す. 大きいほどゆっくり下がる')
+U   = input.float(65.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='+65 ≒ 高値と安値の切り上げが, 合わせて約3〜4日以上続いている')
+L   = input.float(-65.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='-65 ≒ 高値と安値の切り下げが, 合わせて約3〜4日以上続いている')
 f_runLen(bool cnd) =>
     var int r = 0
     r := cnd ? r + 1 : 0
@@ -548,9 +562,9 @@ string note = ''
 G1 = '計算'
 pLen  = input.int(8, '直前の引け圧力の期間', minval=2, group=G1)
 sm    = input.int(3, '平滑EMA', minval=1, group=G1)
-scale = input.float(0.25, 'スケール', minval=0.05, step=0.05, group=G1)
-U     = input.float(45.0, '高値圏ライン', group=GL)
-L     = input.float(-45.0, '安値圏ライン', group=GL)
+kS    = input.float(0.25, 'スケール', minval=0.05, step=0.05, group=G1)
+U     = input.float(45.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='高値引けが続いた後に安値引けの足が出ると上抜ける (天井の確認)')
+L     = input.float(-45.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='安値引けが続いた後に高値引けの足が出ると下抜ける (底の確認)')
 float rng  = high - low
 float clv  = rng > 0 ? (2.0 * close - high - low) / rng : 0.0
 float pNum = f_ema(2.0 * close - high - low, pLen)
@@ -558,7 +572,8 @@ float pDen = f_ema(rng, pLen)
 float pr   = pDen > 0 ? pNum / pDen : na
 float prp  = pr[1]
 float r    = na(prp) ? na : math.max(prp, 0.0) * math.max(-clv, 0.0) - math.max(-prp, 0.0) * math.max(clv, 0.0)
-float osc  = 100.0 * f_tanh(f_ema(r, sm) / scale)
+float sr   = f_ema(r, sm)
+float osc  = bar_index < 20 ? na : 100.0 * f_tanh(sr / kS)     // 最初の20本は初期値の影響が大きいので出さない
 string sfxTop = '(天井確認)'
 string sfxBot = '(底確認)'
 string note = ''
@@ -577,9 +592,10 @@ wb  = input.float(0.5, '吹き上げの重み', minval=0.0, maxval=1.0, group=G1
 smL = input.int(3, '平滑EMA', minval=1, group=G1)
 kUp = input.float(0.45, 'スケール上側(慢心)', minval=0.05, step=0.01, group=G1)
 kDn = input.float(0.26, 'スケール下側(恐怖)', minval=0.05, step=0.01, group=G1)
-U   = input.float(60.0, '高値圏ライン', group=GL)
-L   = input.float(-60.0, '安値圏ライン', group=GL)
-float trp  = na(close[1]) ? na : ta.tr(true) / close[1]
+U   = input.float(60.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='値幅が普段よりかなり縮んで静かすぎる (慢心). 価格の天井そのものではなく警戒')
+L   = input.float(-60.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='下げで値幅が急に広がっている (恐怖). 底の当日に出やすい')
+float tr0  = ta.tr(true)
+float trp  = na(close[1]) ? na : tr0 / close[1]
 float vf   = f_rma(trp, fL)
 float vs   = f_rma(trp, sL)
 float vr   = na(vf) or na(vs) ? na : vf > 0 and vs > 0 ? math.log(vf / vs) : 0.0
@@ -590,7 +606,7 @@ float gate = up2 + dn2 > 0 ? f_tanh(sh * (dn2 - up2) / (up2 + dn2)) : 0.0
 float w    = gate > 0 ? gate : wb * gate
 float xx   = na(vr) ? na : vr > 0 ? -vr * w : -vr
 float xs   = f_ema(xx, smL)
-float osc  = na(xs) ? na : 100.0 * f_tanh(xs / (xs >= 0 ? kUp : kDn))
+float osc  = na(xs) or bar_index < 5 * sL ? na : 100.0 * f_tanh(xs / (xs >= 0 ? kUp : kDn))   // 最初の 5×基準期間 は初期値の影響が大きい
 string sfxTop = '(慢心)'
 string sfxBot = '(恐怖)'
 string note = ''

@@ -98,11 +98,19 @@ def pane(ax, key, line, U, L, st, ev, labels=True, status=True, small=False):
         last = {1: -99, -1: -99}
         prev_x = {1: -99, -1: -99}
         lvl = {1: 0, -1: 0}
+        lbld = {1: True, -1: True}   # 間隔で突入ラベルを省いたゾーンは離脱の印も出さない (Pine と同じ)
         fs = 6 if small else 6.8
         gap = 22 if small else 16
         for t in range(n):
+            if not small and key not in NO_EXIT:
+                if ev["topOut"][t] and lbld[1]:
+                    ax.plot(t, U[t], marker="v", ms=3, color=RED, alpha=0.6)
+                if ev["botOut"][t] and lbld[-1]:
+                    ax.plot(t, L[t], marker="^", ms=3, color=GRN, alpha=0.6)
             for side, k_in, col in ((1, "topIn", RED), (-1, "botIn", GRN)):
-                if ev[k_in][t] and t - last[side] > cool:
+                if ev[k_in][t]:
+                    lbld[side] = t - last[side] > cool
+                if ev[k_in][t] and lbld[side]:
                     lvl[side] = (lvl[side] + 1) % 3 if t - prev_x[side] < gap else 0
                     # ラベルはライン上に付け, 本体は中立側 (上ラインの下 / 下ラインの上) に出す → 画面外に切れない
                     off = -side * (6 + 11 * lvl[side])
@@ -112,11 +120,6 @@ def pane(ax, key, line, U, L, st, ev, labels=True, status=True, small=False):
                                 fontsize=fs, color="white", bbox=dict(boxstyle="round,pad=0.18", fc=col, ec="none"),
                                 arrowprops=dict(arrowstyle="-", color=col, lw=0.5) if lvl[side] else None)
                     last[side] = prev_x[side] = t
-            if not small and key not in NO_EXIT:
-                if ev["topOut"][t]:
-                    ax.plot(t, U[t], marker="v", ms=3, color=RED, alpha=0.6)
-                if ev["botOut"][t]:
-                    ax.plot(t, L[t], marker="^", ms=3, color=GRN, alpha=0.6)
     if status:
         z, v, u, l = st[-1], line[-1], U[-1], L[-1]
         zb = 0

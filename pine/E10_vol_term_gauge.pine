@@ -57,9 +57,10 @@ wb  = input.float(0.5, '吹き上げの重み', minval=0.0, maxval=1.0, group=G1
 smL = input.int(3, '平滑EMA', minval=1, group=G1)
 kUp = input.float(0.45, 'スケール上側(慢心)', minval=0.05, step=0.01, group=G1)
 kDn = input.float(0.26, 'スケール下側(恐怖)', minval=0.05, step=0.01, group=G1)
-U   = input.float(60.0, '高値圏ライン', group=GL)
-L   = input.float(-60.0, '安値圏ライン', group=GL)
-float trp  = na(close[1]) ? na : ta.tr(true) / close[1]
+U   = input.float(60.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='値幅が普段よりかなり縮んで静かすぎる (慢心). 価格の天井そのものではなく警戒')
+L   = input.float(-60.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='下げで値幅が急に広がっている (恐怖). 底の当日に出やすい')
+float tr0  = ta.tr(true)
+float trp  = na(close[1]) ? na : tr0 / close[1]
 float vf   = f_rma(trp, fL)
 float vs   = f_rma(trp, sL)
 float vr   = na(vf) or na(vs) ? na : vf > 0 and vs > 0 ? math.log(vf / vs) : 0.0
@@ -70,7 +71,7 @@ float gate = up2 + dn2 > 0 ? f_tanh(sh * (dn2 - up2) / (up2 + dn2)) : 0.0
 float w    = gate > 0 ? gate : wb * gate
 float xx   = na(vr) ? na : vr > 0 ? -vr * w : -vr
 float xs   = f_ema(xx, smL)
-float osc  = na(xs) ? na : 100.0 * f_tanh(xs / (xs >= 0 ? kUp : kDn))
+float osc  = na(xs) or bar_index < 5 * sL ? na : 100.0 * f_tanh(xs / (xs >= 0 ? kUp : kDn))   // 最初の 5×基準期間 は初期値の影響が大きい
 string sfxTop = '(慢心)'
 string sfxBot = '(恐怖)'
 string note = ''
@@ -113,24 +114,31 @@ fill(pOsc, pL, color=showFill and osc < L ? color.new(C_GRN, 62) : na, title='�
 bgcolor(showBg and zone == 1 ? color.new(C_RED, 93) : showBg and zone == -1 ? color.new(C_GRN, 93) : na, title='ゾーン背景')
 
 // ---- ラベル (確定足のみ). ライン上に付け, 本体は中立側に出すので画面外に切れない ----
+// 間隔(cool)で突入ラベルを省いたゾーンは, 離脱の印も出さない (離脱を先に処理するので反転した足でも正しい)
+var bool topLbld = true
+var bool botLbld = true
 if barstate.isconfirmed
-    if topIn and showIn and (na(lastTopLbl) or bar_index - lastTopLbl > cool)
-        label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
-        lastTopLbl := bar_index
-    if botIn and showIn and (na(lastBotLbl) or bar_index - lastBotLbl > cool)
-        label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
-        lastBotLbl := bar_index
-    if topOut and showOut
+    if topOut and showOut and topLbld
         label.new(bar_index, U, '', style=label.style_triangledown, color=color.new(C_RED, 30), size=size.tiny)
-    if botOut and showOut
+    if botOut and showOut and botLbld
         label.new(bar_index, L, '', style=label.style_triangleup, color=color.new(C_GRN, 30), size=size.tiny)
+    if topIn
+        topLbld := not showIn or na(lastTopLbl) or bar_index - lastTopLbl > cool
+        if showIn and topLbld
+            label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
+            lastTopLbl := bar_index
+    if botIn
+        botLbld := not showIn or na(lastBotLbl) or bar_index - lastBotLbl > cool
+        if showIn and botLbld
+            label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
+            lastBotLbl := bar_index
 
 // ---- 状態テーブル ----
 var table tb = table.new(tblPosS == '右上' ? position.top_right : tblPosS == '右下' ? position.bottom_right : tblPosS == '左上' ? position.top_left : position.bottom_left, 1, 1)
 if showTbl and barstate.islast
     string tsz = tblSizeS == '大' ? size.large : tblSizeS == '中' ? size.normal : size.small
     string st  = zone == 1 ? '高値圏 ' + str.tostring(zBars) + '本目' : zone == -1 ? '安値圏 ' + str.tostring(zBars) + '本目' : na(osc) ? '計算中' : osc >= 0.75 * U ? '上ライン接近' : osc <= 0.75 * L ? '下ライン接近' : '中立'
-    string ds  = na(osc) ? '' : zone == 1 ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
+    string ds  = na(osc) ? '' : zone == 1 and osc > U ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 and osc < L ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : zone != 0 ? ' / 離脱の遊びの中' : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
     string pv  = barstate.isconfirmed ? '' : '（確定前）'
     color tc   = zone == 1 ? C_RED : zone == -1 ? C_GRN : chart.fg_color
     table.cell(tb, 0, 0, '【E10ボラ】状態: ' + st + ds + pv + note, text_color=tc, text_size=tsz, bgcolor=color.new(chart.bg_color, 20))
@@ -142,5 +150,5 @@ alertcondition(botIn and barstate.isconfirmed, '安値圏突入', '{{ticker}} E1
 alertcondition(botOut and barstate.isconfirmed, '安値圏離脱', '{{ticker}} E10ボラ 安値圏離脱')
 alertcondition((topIn or topOut or botIn or botOut) and barstate.isconfirmed, 'ゾーン変化(いずれか)', '{{ticker}} E10ボラ ゾーン変化')
 if barstate.isconfirmed and (topIn or topOut or botIn or botOut)
-    string evt = topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
+    string evt = topOut and botIn ? '高値圏離脱→安値圏突入' : botOut and topIn ? '安値圏離脱→高値圏突入' : topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
     alert(syminfo.ticker + ' E10ボラ ' + evt + ' 値=' + str.tostring(osc, '#'), alert.freq_once_per_bar_close)

@@ -95,9 +95,9 @@ def sd_line(c, h, l, k, mode, nAtr=50, K=8, Kmin=3, tau=4.0, handoff=1.0):
                 d = -d
         dirs[t] = d
         if d != 0:
-            if mode == "age" and len(D[d]) >= Kmin:
+            if mode == "age" and len(D[d]) >= min(Kmin, K):
                 raw[t] = 100 * d * kc(eB - pB, D[d], 0.15, 1.0) * math.exp(-((t - eB) / tau) ** 2)
-            if mode == "ext" and len(A[d]) >= Kmin:
+            if mode == "ext" and len(A[d]) >= min(Kmin, K):
                 u = min(1.0, max(0.0, d * (eX - v) / (handoff * hh)))
                 raw[t] = 100 * d * kc(abs(eX - pX), A[d], 0.15, 0.0) * (1 - u)
     return raw, dirs

@@ -32,10 +32,10 @@ hyst     = input.float(0.0, '離脱の遊び(0=なし)', minval=0.0, maxval=30.0
 
 // ======== ここから E7周期 固有の計算 ========
 G1 = '計算'
-P  = input.int(20, 'サイクル長 P', minval=6, maxval=120, group=G1)
-z0 = input.float(0.5, '位相確度の下限', minval=0.05, maxval=1.0, step=0.05, group=G1)
-U  = input.float(85.0, '高値圏ライン', group=GL)
-L  = input.float(-85.0, '安値圏ライン', group=GL)
+P  = input.int(20, 'サイクル長 P', minval=6, maxval=120, group=G1, tooltip='想定するサイクルの長さ(本). TQQQ 日足は20前後, SOXL は16〜18, SPXL は20〜24 が目安')
+z0 = input.float(0.5, '位相確度の下限', minval=0.05, maxval=1.0, step=0.05, group=G1, tooltip='波の形がはっきりしない時に線を0へ寄せる強さ')
+U  = input.float(85.0, '高値圏ライン', minval=1, maxval=99, group=GL, tooltip='+85 ≒ サイクルの山の前後 約2本以内')
+L  = input.float(-85.0, '安値圏ライン', minval=-99, maxval=-1, group=GL, tooltip='-85 ≒ サイクルの谷の前後 約2本以内')
 float nn  = P
 float sx  = 0.0
 float sxx = 0.0
@@ -104,24 +104,31 @@ fill(pOsc, pL, color=showFill and osc < L ? color.new(C_GRN, 62) : na, title='�
 bgcolor(showBg and zone == 1 ? color.new(C_RED, 93) : showBg and zone == -1 ? color.new(C_GRN, 93) : na, title='ゾーン背景')
 
 // ---- ラベル (確定足のみ). ライン上に付け, 本体は中立側に出すので画面外に切れない ----
+// 間隔(cool)で突入ラベルを省いたゾーンは, 離脱の印も出さない (離脱を先に処理するので反転した足でも正しい)
+var bool topLbld = true
+var bool botLbld = true
 if barstate.isconfirmed
-    if topIn and showIn and (na(lastTopLbl) or bar_index - lastTopLbl > cool)
-        label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
-        lastTopLbl := bar_index
-    if botIn and showIn and (na(lastBotLbl) or bar_index - lastBotLbl > cool)
-        label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
-        lastBotLbl := bar_index
-    if topOut and showOut
+    if topOut and showOut and topLbld
         label.new(bar_index, U, '', style=label.style_triangledown, color=color.new(C_RED, 30), size=size.tiny)
-    if botOut and showOut
+    if botOut and showOut and botLbld
         label.new(bar_index, L, '', style=label.style_triangleup, color=color.new(C_GRN, 30), size=size.tiny)
+    if topIn
+        topLbld := not showIn or na(lastTopLbl) or bar_index - lastTopLbl > cool
+        if showIn and topLbld
+            label.new(bar_index, U, '高値圏突入' + sfxTop, style=label.style_label_up, color=C_RED, textcolor=color.white, size=size.small)
+            lastTopLbl := bar_index
+    if botIn
+        botLbld := not showIn or na(lastBotLbl) or bar_index - lastBotLbl > cool
+        if showIn and botLbld
+            label.new(bar_index, L, '安値圏突入' + sfxBot, style=label.style_label_down, color=C_GRN, textcolor=color.white, size=size.small)
+            lastBotLbl := bar_index
 
 // ---- 状態テーブル ----
 var table tb = table.new(tblPosS == '右上' ? position.top_right : tblPosS == '右下' ? position.bottom_right : tblPosS == '左上' ? position.top_left : position.bottom_left, 1, 1)
 if showTbl and barstate.islast
     string tsz = tblSizeS == '大' ? size.large : tblSizeS == '中' ? size.normal : size.small
     string st  = zone == 1 ? '高値圏 ' + str.tostring(zBars) + '本目' : zone == -1 ? '安値圏 ' + str.tostring(zBars) + '本目' : na(osc) ? '計算中' : osc >= 0.75 * U ? '上ライン接近' : osc <= 0.75 * L ? '下ライン接近' : '中立'
-    string ds  = na(osc) ? '' : zone == 1 ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
+    string ds  = na(osc) ? '' : zone == 1 and osc > U ? ' / 上ライン超え +' + str.tostring(osc - U, '#') : zone == -1 and osc < L ? ' / 下ライン超え ' + str.tostring(osc - L, '#') : zone != 0 ? ' / 離脱の遊びの中' : osc >= 0 ? ' / 上ラインまで ' + str.tostring(U - osc, '#') : ' / 下ラインまで ' + str.tostring(osc - L, '#')
     string pv  = barstate.isconfirmed ? '' : '（確定前）'
     color tc   = zone == 1 ? C_RED : zone == -1 ? C_GRN : chart.fg_color
     table.cell(tb, 0, 0, '【E7周期】状態: ' + st + ds + pv + note, text_color=tc, text_size=tsz, bgcolor=color.new(chart.bg_color, 20))
@@ -133,5 +140,5 @@ alertcondition(botIn and barstate.isconfirmed, '安値圏突入', '{{ticker}} E7
 alertcondition(botOut and barstate.isconfirmed, '安値圏離脱', '{{ticker}} E7周期 安値圏離脱')
 alertcondition((topIn or topOut or botIn or botOut) and barstate.isconfirmed, 'ゾーン変化(いずれか)', '{{ticker}} E7周期 ゾーン変化')
 if barstate.isconfirmed and (topIn or topOut or botIn or botOut)
-    string evt = topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
+    string evt = topOut and botIn ? '高値圏離脱→安値圏突入' : botOut and topIn ? '安値圏離脱→高値圏突入' : topIn ? '高値圏突入' : topOut ? '高値圏離脱' : botIn ? '安値圏突入' : '安値圏離脱'
     alert(syminfo.ticker + ' E7周期 ' + evt + ' 値=' + str.tostring(osc, '#'), alert.freq_once_per_bar_close)
